@@ -13,6 +13,9 @@ lerna-debug.log*
 .env
 /app/tailwind.css
 
+# Development database
+/db/dev.sqlite3
+
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
