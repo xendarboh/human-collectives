@@ -22,7 +22,6 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 export const action: ActionFunction = async ({ request, params }) => {
   const auth = await requireAuthenticatedUser(request);
   invariant(params.id, "Poll ID not found");
-  invariant(auth.user?.id);
   await deletePoll({ id: +params.id, creator: auth.user.id });
   return redirect("/polls");
 };

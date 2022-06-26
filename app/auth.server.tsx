@@ -1,9 +1,12 @@
-import { Authenticator } from "remix-auth";
 import invariant from "tiny-invariant";
+import { Authenticator, AuthorizationError } from "remix-auth";
+import { redirect } from "@remix-run/node";
 
 import type { User } from "~/models/user.server";
 import { HumanodeStrategy } from "../src/remix-auth-humanode";
+import { commitSession } from "~/session.server";
 import { createUser } from "~/models/user.server";
+import { getSession } from "~/session.server";
 import { getUser } from "~/models/user.server";
 import { sessionStorage } from "~/session.server";
 import { verifyJWT } from "~/utils/jwt.server";
@@ -22,19 +25,20 @@ invariant(
 );
 
 // The AuthenticatedUser type is stored in the session storage to identify the
-// authenticated user. It can be the complete user data or a string with a
-// token.
+// authenticated user.
 export interface AuthenticatedUser {
-  id?: string;
-  jwt?: string;
-  user?: User; // user info from the database
+  id: string;
+  jwt: string;
+  user: User; // from the database
 }
 
-// Create an instance of the authenticator, pass a generic with what
+// Create an instance of the authenticator, pass a User Type with what
 // strategies will return and will store in the session
 export let authenticator = new Authenticator<AuthenticatedUser>(
   sessionStorage,
   {
+    sessionKey: "sessionKey",
+    sessionErrorKey: "sessionErrorKey",
     throwOnError: true,
   }
 );
@@ -47,22 +51,25 @@ const humanodeStrategy = new HumanodeStrategy(
   },
   async ({ extraParams }) => {
     const id_token = extraParams.id_token.toString();
+
+    // validate the jwt token
     const claims = await verifyJWT(id_token);
+    if (claims.error) throw new AuthorizationError("Authorization Failed");
 
-    if (claims.error) return { error: claims.error };
-
-    // TODO: hash bioid for storage in the database
+    // ensure humanode identifier is set
     const bioid = claims.sub; // humanode identifer
-    invariant(bioid, "humanode identifer undefined");
+    if (!bioid || bioid.length === 0)
+      throw new AuthorizationError("Humanode Identifer Missing");
 
-    // retreive user from the database if it exists
-    // create user in the database if it does not
+    // retreive user from database if it exists
+    // create user in database if does not exist, to "register" the user
+    // ensure user exists
     let user = await getUser({ bioid });
     if (!user) user = await createUser({ bioid });
-    invariant(user, "user registration failed");
+    if (!user) throw new AuthorizationError("User Registration Failed");
 
     return {
-      id: claims.sub,
+      id: bioid,
       jwt: id_token,
       user,
     };
@@ -82,9 +89,24 @@ export async function requireAuthenticatedUser(
     failureRedirect,
   });
 
-  const jwtClaims = await verifyJWT(auth.jwt || "");
+  const jwtClaims = await verifyJWT(auth.jwt);
 
-  if (jwtClaims.error) await logout(request, failureRedirect);
+  // if jwt verification fails, like token expiration or otherwise
+  // then set a session "flash" message as an error to be shown on the login page
+  // and manually clear the authenticated session data to force re-authentication
+  if (jwtClaims.error) {
+    // https://remix.run/docs/en/v1/api/remix#sessionflashkey-value
+    const session = await getSession(request.headers.get("Cookie"));
+    session.flash(authenticator.sessionErrorKey, {
+      message: jwtClaims.error.message,
+    });
+    session.unset(authenticator.sessionKey);
+    throw redirect(failureRedirect, {
+      headers: {
+        "Set-Cookie": await commitSession(session),
+      },
+    });
+  }
 
   return auth;
 }

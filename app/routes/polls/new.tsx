@@ -40,7 +40,6 @@ export const action: ActionFunction = async ({ request }) => {
     );
   }
 
-  invariant(auth.user?.id);
   const poll = await createPoll({ title, body, creator: auth.user.id });
   invariant(poll, "Failed to create poll");
   return redirect(`/polls/${poll.id}`);
