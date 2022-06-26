@@ -4,32 +4,26 @@ import { Form, useCatch, useLoaderData } from "@remix-run/react";
 import invariant from "tiny-invariant";
 
 import type { Poll } from "~/models/poll.server";
-import { deletePoll } from "~/models/poll.server";
-import { getPoll } from "~/models/poll.server";
-// TODO: import { requireUserId } from "~/session.server";
+import { deletePoll, getPoll } from "~/models/poll.server";
+import { requireAuthenticatedUser } from "~/auth.server";
 
 type LoaderData = {
   poll: Poll;
 };
 
 export const loader: LoaderFunction = async ({ request, params }) => {
-  // TODO: const userId = await requireUserId(request);
+  await requireAuthenticatedUser(request);
   invariant(params.id, "Poll ID not found");
-
-  // TODO: const poll = await getPoll({ userId, id: params.pollId });
   const poll = await getPoll({ id: +params.id });
-  if (!poll) {
-    throw new Response("Not Found", { status: 404 });
-  }
+  if (!poll) throw new Response("Not Found", { status: 404 });
   return json<LoaderData>({ poll });
 };
 
 export const action: ActionFunction = async ({ request, params }) => {
-  // TODO: const userId = await requireUserId(request);
+  const auth = await requireAuthenticatedUser(request);
   invariant(params.id, "Poll ID not found");
-
-  // TODO: await deletePoll({ userId, id: params.pollId });
-  await deletePoll({ id: +params.id });
+  invariant(auth.user?.id);
+  await deletePoll({ id: +params.id, creator: auth.user.id });
   return redirect("/polls");
 };
 

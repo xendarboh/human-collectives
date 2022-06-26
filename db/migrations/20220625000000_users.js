@@ -3,13 +3,11 @@
  * @returns { Promise<void> }
  */
 exports.up = function (knex) {
-  return knex.schema.hasTable("polls").then((exists) => {
+  return knex.schema.hasTable("users").then((exists) => {
     if (!exists) {
-      return knex.schema.createTable("polls", (t) => {
+      return knex.schema.createTable("users", (t) => {
         t.increments();
-        t.string("title");
-        t.string("body");
-        t.bigInteger("creator");
+        t.string("bioid");
         t.timestamps();
       });
     }

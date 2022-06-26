@@ -1,10 +1,11 @@
-import type { ActionFunction } from "@remix-run/node";
+import type { ActionFunction, LoaderFunction } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
 import { Form, useActionData } from "@remix-run/react";
 import * as React from "react";
+import invariant from "tiny-invariant";
 
 import { createPoll } from "~/models/poll.server";
-// TODO import { requireUserId } from "~/session.server";
+import { requireAuthenticatedUser } from "~/auth.server";
 
 type ActionData = {
   errors?: {
@@ -13,8 +14,13 @@ type ActionData = {
   };
 };
 
+export const loader: LoaderFunction = async ({ request }) => {
+  await requireAuthenticatedUser(request);
+  return null;
+};
+
 export const action: ActionFunction = async ({ request }) => {
-  // @TODO const userId = await requireUserId(request);
+  const auth = await requireAuthenticatedUser(request);
 
   const formData = await request.formData();
   const title = formData.get("title");
@@ -34,9 +40,9 @@ export const action: ActionFunction = async ({ request }) => {
     );
   }
 
-  // @TODO const poll = await createPoll({ title, body, userId });
-  const polls = await createPoll({ title, body });
-  const poll = polls[0];
+  invariant(auth.user?.id);
+  const poll = await createPoll({ title, body, creator: auth.user.id });
+  invariant(poll, "Failed to create poll");
   return redirect(`/polls/${poll.id}`);
 };
 
