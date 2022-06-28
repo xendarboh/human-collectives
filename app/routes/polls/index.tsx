@@ -1,15 +1,16 @@
 import type { LoaderFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
-import { Link, useLoaderData } from "@remix-run/react";
+import { useLoaderData } from "@remix-run/react";
 
 import type { Poll } from "~/models/poll.server";
 import { getPolls } from "~/models/poll.server";
+import { PollCard } from "~/ui/poll-card";
 
 type LoaderData = {
   polls: Array<Poll>;
 };
 
-export const loader: LoaderFunction = async ({ params }) => {
+export const loader: LoaderFunction = async () => {
   return json({
     polls: await getPolls(),
   });
@@ -21,15 +22,13 @@ export default function Polls() {
   return (
     <main>
       <h1 className="text-2xl font-bold">Polls</h1>
-      <ul className="list-disc">
+      <div className="grid place-items-center">
         {polls.map((poll) => (
-          <li key={poll.id}>
-            <Link to={`/polls/${poll.id}`}>
-              {poll.id} | {poll.title} | {poll.body}
-            </Link>
-          </li>
+          <div key={poll.id} className="my-2">
+            <PollCard poll={poll} data-theme="light" />
+          </div>
         ))}
-      </ul>
+      </div>
     </main>
   );
 }

@@ -17,8 +17,9 @@ export const createPoll = async (
 export const deletePoll = async (query: Omit<Poll, "title" | "body">) =>
   await db("polls").where(query).del();
 
-export const getPolls = async (): Promise<Poll[]> =>
-  await db.select("id", "title", "body", "creator").from<Poll>("polls");
+export const getPolls = async (
+  query: Partial<Poll> | undefined = {}
+): Promise<Poll[]> => await db.select().from<Poll>("polls").where(query);
 
 export const getPoll = async (
   query: Pick<Poll, "id">

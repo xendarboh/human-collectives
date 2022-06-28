@@ -2,12 +2,13 @@ import type { LoaderFunction } from "@remix-run/node";
 import { Form, useLoaderData } from "@remix-run/react";
 import { json } from "@remix-run/node";
 
+import type { AuthenticatedUser } from "~/auth.server";
 import { authenticator } from "~/auth.server";
 import { commitSession } from "~/session.server";
 import { getSession } from "~/session.server";
 
 type LoaderData = {
-  auth?: any;
+  auth: AuthenticatedUser;
   error?: any;
 };
 
