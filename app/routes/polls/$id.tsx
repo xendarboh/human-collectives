@@ -8,8 +8,13 @@ import { Form, Link, useCatch, useLoaderData } from "@remix-run/react";
 import invariant from "tiny-invariant";
 
 import type { Poll } from "~/models/poll.server";
-import { deletePoll, getPoll, isPollCreator } from "~/models/poll.server";
 import { requireAuthenticatedUser } from "~/auth.server";
+import {
+  deletePoll,
+  getPoll,
+  isPollCreator,
+  updatePoll,
+} from "~/models/poll.server";
 
 type LoaderData = {
   isCreator: boolean;
@@ -34,9 +39,34 @@ export const loader: LoaderFunction = async (args) => {
 };
 
 export const action: ActionFunction = async (args) => {
-  const { auth, poll } = await common(args);
-  await deletePoll({ id: poll.id, creator: auth.user.id });
-  return redirect("/polls");
+  const { auth, isCreator, poll } = await common(args);
+  const formData = await args.request.formData();
+
+  switch (formData.get("action")) {
+    case "delete": {
+      if (!isCreator) {
+        throw new Response("Only the poll creator can delete it", {
+          status: 403,
+        });
+      }
+      await deletePoll({ id: poll.id, creator: auth.user.id });
+      return redirect("/polls");
+    }
+
+    case "publish": {
+      if (!isCreator) {
+        throw new Response("Only the poll creator can publish it", {
+          status: 403,
+        });
+      }
+      await updatePoll(poll.id, { isPublished: true }, { validate: false });
+      return redirect(`/polls/${poll.id}`);
+    }
+
+    default: {
+      throw new Error("Unknown Action");
+    }
+  }
 };
 
 export default function PollDetailsPage() {
@@ -46,7 +76,7 @@ export default function PollDetailsPage() {
     <div>
       <h3 className="text-2xl font-bold">{poll.title}</h3>
       <pre className="py-6">{poll.body}</pre>
-      {isCreator && (
+      {isCreator && !poll.isPublished && (
         <div>
           <hr className="my-4" />
           <Form method="post">
@@ -54,14 +84,25 @@ export default function PollDetailsPage() {
               <Link to="edit" className="btn btn-primary">
                 Edit
               </Link>
-              <Link to="publish" className="btn btn-primary">
+              <button
+                type="submit"
+                name="action"
+                value="publish"
+                className="btn btn-primary"
+              >
                 Publish
-              </Link>
-              <button type="submit" className="btn btn-warning">
+              </button>
+              <button
+                type="submit"
+                name="action"
+                value="delete"
+                className="btn btn-warning"
+              >
                 Delete
               </button>
             </div>
           </Form>
+          <pre>{JSON.stringify(poll, null, 2)}</pre>
         </div>
       )}
     </div>
@@ -76,8 +117,10 @@ export function ErrorBoundary({ error }: { error: Error }) {
 export function CatchBoundary() {
   const caught = useCatch();
 
-  if (caught.status === 404) {
-    return <div>Poll not found</div>;
+  switch (caught.status) {
+    case 403:
+    case 404:
+      return <div>{caught.data}</div>;
   }
 
   throw new Error(`Unexpected caught response with status: ${caught.status}`);

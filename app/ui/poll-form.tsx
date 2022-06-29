@@ -1,6 +1,6 @@
 import type { FormProps } from "@remix-run/react";
 import * as React from "react";
-import { Form } from "@remix-run/react";
+import { Link, Form } from "@remix-run/react";
 
 import type { Poll } from "~/models/poll.server";
 
@@ -67,6 +67,12 @@ const PollForm = ({ actionData, poll, ...props }: PollFormProps) => {
         <button type="submit" className="btn btn-primary">
           Save
         </button>
+        <Link
+          to={poll ? `/polls/${poll.id}` : "/polls/"}
+          className="btn btn-primary"
+        >
+          Cancel
+        </Link>
       </div>
     </Form>
   );

@@ -1,29 +1,49 @@
 import { db } from "~/db.server";
 
-export type Poll = {
+export interface Poll {
   id: number;
   title: string;
   body: string;
   creator: number;
+  isPublished: boolean;
+}
+
+export interface PollQueryOptions {
+  validate: boolean;
+}
+
+export const defaultQueryOpts: PollQueryOptions = {
+  validate: true,
 };
 
-export const createPoll = async (data: any): Promise<[any, Poll | null]> => {
-  const errors = validatePoll(data);
+export const createPoll = async (
+  data: any,
+  opts: PollQueryOptions = defaultQueryOpts
+): Promise<[any, Poll | null]> => {
+  const errors = opts.validate ? validatePoll(data) : undefined;
   if (errors) return [errors, null];
 
+  // insert new poll and receive the id
   const res = await db.insert(data, ["id"]).into("polls");
-  return [undefined, !res.length ? null : res[0]];
+  if (!res.length) return [errors, null];
+
+  // with the id, retrieve and return all columns
+  return [errors, await getPoll({ id: res[0].id })];
 };
 
-export const updatePoll = async (id: number, data: any): Promise<[any]> => {
-  const errors = validatePoll(data);
-  if (errors) return [errors];
+export const updatePoll = async (
+  id: number,
+  data: any,
+  opts: PollQueryOptions = defaultQueryOpts
+): Promise<[any, Poll | null]> => {
+  const errors = opts.validate ? validatePoll(data) : undefined;
+  if (errors) return [errors, null];
 
   await db("polls").where({ id }).update(data);
-  return [undefined];
+  return [errors, await getPoll({ id })];
 };
 
-export const deletePoll = async (query: Omit<Poll, "title" | "body">) =>
+export const deletePoll = async (query: Pick<Poll, "id" | "creator">) =>
   await db("polls").where(query).del();
 
 export const getPolls = async (
@@ -33,10 +53,7 @@ export const getPolls = async (
 export const getPoll = async (
   query: Pick<Poll, "id">
 ): Promise<Poll | null> => {
-  const res = await db
-    .select("id", "title", "body", "creator")
-    .from<Poll>("polls")
-    .where(query);
+  const res = await db.select().from<Poll>("polls").where(query);
   return !res.length ? null : res[0];
 };
 
