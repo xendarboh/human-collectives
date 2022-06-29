@@ -1,54 +1,75 @@
-import type { ActionFunction, LoaderFunction } from "@remix-run/node";
+import type {
+  ActionFunction,
+  DataFunctionArgs,
+  LoaderFunction,
+} from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
-import { Form, useCatch, useLoaderData } from "@remix-run/react";
+import { Form, Link, useCatch, useLoaderData } from "@remix-run/react";
 import invariant from "tiny-invariant";
 
 import type { Poll } from "~/models/poll.server";
-import { deletePoll, getPoll } from "~/models/poll.server";
+import { deletePoll, getPoll, isPollCreator } from "~/models/poll.server";
 import { requireAuthenticatedUser } from "~/auth.server";
 
 type LoaderData = {
+  isCreator: boolean;
   poll: Poll;
 };
 
-export const loader: LoaderFunction = async ({ request, params }) => {
-  await requireAuthenticatedUser(request);
+export const common = async ({ params, request }: DataFunctionArgs) => {
+  const auth = await requireAuthenticatedUser(request);
+
   invariant(params.id, "Poll ID not found");
   const poll = await getPoll({ id: +params.id });
-  if (!poll) throw new Response("Not Found", { status: 404 });
-  return json<LoaderData>({ poll });
+  if (!poll) throw new Response("Poll Not Found", { status: 404 });
+
+  const isCreator = isPollCreator(poll, auth.user.id);
+
+  return { auth, poll, isCreator };
 };
 
-export const action: ActionFunction = async ({ request, params }) => {
-  const auth = await requireAuthenticatedUser(request);
-  invariant(params.id, "Poll ID not found");
-  await deletePoll({ id: +params.id, creator: auth.user.id });
+export const loader: LoaderFunction = async (args) => {
+  const { isCreator, poll } = await common(args);
+  return json<LoaderData>({ isCreator, poll });
+};
+
+export const action: ActionFunction = async (args) => {
+  const { auth, poll } = await common(args);
+  await deletePoll({ id: poll.id, creator: auth.user.id });
   return redirect("/polls");
 };
 
 export default function PollDetailsPage() {
-  const data = useLoaderData() as LoaderData;
+  const { isCreator, poll } = useLoaderData() as LoaderData;
 
   return (
     <div>
-      <h3 className="text-2xl font-bold">{data.poll.title}</h3>
-      <p className="py-6">{data.poll.body}</p>
-      <hr className="my-4" />
-      <Form method="post">
-        <button
-          type="submit"
-          className="rounded bg-blue-500  py-2 px-4 text-white hover:bg-blue-600 focus:bg-blue-400"
-        >
-          Delete
-        </button>
-      </Form>
+      <h3 className="text-2xl font-bold">{poll.title}</h3>
+      <pre className="py-6">{poll.body}</pre>
+      {isCreator && (
+        <div>
+          <hr className="my-4" />
+          <Form method="post">
+            <div className="flex gap-4">
+              <Link to="edit" className="btn btn-primary">
+                Edit
+              </Link>
+              <Link to="publish" className="btn btn-primary">
+                Publish
+              </Link>
+              <button type="submit" className="btn btn-warning">
+                Delete
+              </button>
+            </div>
+          </Form>
+        </div>
+      )}
     </div>
   );
 }
 
 export function ErrorBoundary({ error }: { error: Error }) {
   console.error(error);
-
   return <div>An unexpected error occurred: {error.message}</div>;
 }
 
