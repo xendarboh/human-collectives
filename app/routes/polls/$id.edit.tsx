@@ -10,6 +10,7 @@ import invariant from "tiny-invariant";
 import type { Poll } from "~/models/poll.server";
 import type { PollFormActionData } from "~/ui/poll-form";
 import { PollForm } from "~/ui/poll-form";
+import { deleteChoices } from "~/models/choice.server";
 import { getPollFormData } from "~/routes/polls/new";
 import { requireAuthenticatedUser } from "~/auth.server";
 import { updatePoll, getPoll, isPollCreator } from "~/models/poll.server";
@@ -41,11 +42,9 @@ export const loader: LoaderFunction = async (args) => {
 
 export const action: ActionFunction = async (args) => {
   const { poll } = await common(args);
-  const { values, choicesRemovedId } = await getPollFormData(args);
+  const { values, choicesRemoved } = await getPollFormData(args);
   const [errors] = await updatePoll(+poll.id, values);
-
-  // TODO: remove removed choices and poll2choice associations
-  console.log("choicesRemoved", choicesRemovedId);
+  await deleteChoices(choicesRemoved);
 
   if (errors)
     return json<PollFormActionData>({ errors, values }, { status: 400 });

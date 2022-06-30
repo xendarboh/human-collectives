@@ -3,6 +3,7 @@ import invariant from "tiny-invariant";
 import type { Choice } from "~/models/choice.server";
 import { db } from "~/db.server";
 import {
+  deletePollChoices,
   getPollChoices,
   updatePollChoices,
   validatePollChoices,
@@ -55,8 +56,10 @@ export const updatePoll = async (
   return [errors, await getPoll({ id })];
 };
 
-export const deletePoll = async (query: Pick<Poll, "id" | "creator">) =>
-  await db("polls").where(query).del();
+export const deletePoll = async (id: number) => {
+  await db("polls").where({ id }).del();
+  await deletePollChoices(id);
+};
 
 export const getPolls = async (
   query: Partial<Poll> | undefined = {}

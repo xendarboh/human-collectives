@@ -76,7 +76,7 @@ const PollForm = ({ actionData, poll, ...props }: PollFormProps) => {
         </label>
         <div className="grid gap-1">
           {choicesRemoved.map((id, key) => (
-            <input key={key} type="hidden" name="choicesRemovedId" value={id} />
+            <input key={key} type="hidden" name="choicesRemoved" value={id} />
           ))}
           {choices.map((choice, key) => (
             <div key={key} className="flex items-center space-x-1">

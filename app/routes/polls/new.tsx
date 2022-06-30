@@ -17,7 +17,7 @@ export const getPollFormData = async ({ request }: DataFunctionArgs) => {
   const formData = await request.formData();
   const body = formData.get("body")?.toString();
   const title = formData.get("title")?.toString();
-  const choicesRemovedId = formData.getAll("choicesRemovedId");
+  const choicesRemoved = formData.getAll("choicesRemoved");
 
   // build choices from two sets of form data
   const choicesContent = formData.getAll("choicesContent");
@@ -36,7 +36,7 @@ export const getPollFormData = async ({ request }: DataFunctionArgs) => {
     choices,
   };
 
-  return { values, choicesRemovedId };
+  return { values, choicesRemoved };
 };
 
 export const loader: LoaderFunction = async ({ request }) => {
