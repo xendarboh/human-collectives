@@ -85,6 +85,19 @@ export async function requireAuthenticatedUser(
   const searchParams = new URLSearchParams([["redirectTo", redirectTo]]);
   const failureRedirect = `/login?${searchParams}`;
 
+  // Note: Potentially Dangerous! For development, hack authenticated user to bypass bioauth.
+  if (process.env.NODE_ENV === "development") {
+    const hackUserId = process.env.DEV_HACK_AUTHENTICATED_USER;
+    if (hackUserId && +hackUserId > 0) {
+      const filler = "XXXXXXXX";
+      return {
+        id: filler,
+        jwt: filler,
+        user: { id: +hackUserId, bioid: filler },
+      };
+    }
+  }
+
   const auth = await authenticator.isAuthenticated(request, {
     failureRedirect,
   });
