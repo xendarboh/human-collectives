@@ -1,4 +1,12 @@
+import invariant from "tiny-invariant";
+
+import type { Choice } from "~/models/choice.server";
 import { db } from "~/db.server";
+import {
+  getPollChoices,
+  updatePollChoices,
+  validatePollChoices,
+} from "~/models/choice.server";
 
 export interface Poll {
   id: number;
@@ -6,6 +14,7 @@ export interface Poll {
   body: string;
   creator: number;
   isPublished: boolean;
+  choices: Array<Choice>;
 }
 
 export interface PollQueryOptions {
@@ -24,22 +33,25 @@ export const createPoll = async (
   if (errors) return [errors, null];
 
   // insert new poll and receive the id
-  const res = await db.insert(data, ["id"]).into("polls");
-  if (!res.length) return [errors, null];
+  const { choices, ...pollData } = data;
+  const [{ id }] = await db.insert(pollData, ["id"]).into("polls");
+  invariant(id, "Insert poll failed");
 
-  // with the id, retrieve and return all columns
-  return [errors, await getPoll({ id: res[0].id })];
+  if (choices) await updatePollChoices(id, choices);
+  return [errors, await getPoll({ id })];
 };
 
 export const updatePoll = async (
   id: number,
-  data: any,
+  data: Partial<Poll>,
   opts: PollQueryOptions = defaultQueryOpts
 ): Promise<[any, Poll | null]> => {
   const errors = opts.validate ? validatePoll(data) : undefined;
   if (errors) return [errors, null];
 
-  await db("polls").where({ id }).update(data);
+  const { choices, ...pollData } = data;
+  await db("polls").where({ id }).update(pollData);
+  if (choices) await updatePollChoices(id, choices);
   return [errors, await getPoll({ id })];
 };
 
@@ -53,8 +65,12 @@ export const getPolls = async (
 export const getPoll = async (
   query: Pick<Poll, "id">
 ): Promise<Poll | null> => {
-  const res = await db.select().from<Poll>("polls").where(query);
-  return !res.length ? null : res[0];
+  const [res] = await db.select().from<Poll>("polls").where(query);
+  if (!res) return null;
+  return {
+    ...res,
+    choices: await getPollChoices(res.id),
+  };
 };
 
 export const isPollCreator = (poll: Poll, userID: number): boolean =>
@@ -64,6 +80,7 @@ export const validatePoll = (data: any) => {
   const errors = {
     title: validatePollTitle(data.title),
     body: validatePollBody(data.body),
+    choices: validatePollChoices(data.choices),
   };
   return Object.values(errors).some(Boolean) ? errors : undefined;
 };

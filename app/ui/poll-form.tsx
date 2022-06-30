@@ -2,6 +2,7 @@ import type { FormProps } from "@remix-run/react";
 import * as React from "react";
 import { Link, Form } from "@remix-run/react";
 
+import type { Choice } from "~/models/choice.server";
 import type { Poll } from "~/models/poll.server";
 
 const PollForm = ({ actionData, poll, ...props }: PollFormProps) => {
@@ -15,6 +16,12 @@ const PollForm = ({ actionData, poll, ...props }: PollFormProps) => {
       bodyRef.current?.focus();
     }
   }, [actionData]);
+
+  const [choicesRemoved, setChoicesRemoved] = React.useState<Array<number>>([]);
+
+  const [choices, setChoices] = React.useState<Array<Choice>>(
+    poll?.choices || actionData?.values?.choices || []
+  );
 
   return (
     <Form {...props} className="grid gap-2">
@@ -63,7 +70,83 @@ const PollForm = ({ actionData, poll, ...props }: PollFormProps) => {
         )}
       </div>
 
-      <div className="flex gap-4">
+      <div>
+        <label className="label">
+          <span className="label-text">Choices</span>
+        </label>
+        <div className="grid gap-1">
+          {choicesRemoved.map((id, key) => (
+            <input key={key} type="hidden" name="choicesRemovedId" value={id} />
+          ))}
+          {choices.map((choice, key) => (
+            <div key={key} className="flex items-center space-x-1">
+              <input type="hidden" name="choicesId" value={choice.id} />
+              <input
+                type="text"
+                name="choicesContent"
+                className="input input-bordered input-primary w-full max-w-xs bg-primary-content"
+                value={choices[key].content}
+                onChange={(e) => {
+                  let n = [...choices];
+                  n[key].content = e.target.value;
+                  setChoices(n);
+                }}
+              />
+              <span
+                className="btn btn-circle btn-sm"
+                onClick={() => {
+                  setChoices(choices.filter((_, i) => i !== key));
+                  if (choice.id > 0)
+                    setChoicesRemoved([...choicesRemoved, choice.id]);
+                }}
+              >
+                {/* cross sign */}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </span>
+            </div>
+          ))}
+          <span
+            className="btn btn-circle btn-sm mt-1"
+            onClick={() => setChoices([...choices, { id: 0, content: "" }])}
+          >
+            {/* plus sign */}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M12 18L12 6M6 12l12 0"
+              />
+            </svg>
+          </span>
+        </div>
+        {actionData?.errors?.choices && (
+          <div className="pt-1 text-red-700" id="choices-error">
+            {actionData.errors.choices}
+          </div>
+        )}
+      </div>
+
+      <div className="mt-8 flex gap-4">
         <button type="submit" className="btn btn-primary">
           Save
         </button>
@@ -84,10 +167,12 @@ type PollFormActionData = {
   errors?: {
     title?: string;
     body?: string;
+    choices?: string;
   };
   values?: {
     title?: string;
     body?: string;
+    choices?: Array<Choice>;
   };
 };
 
