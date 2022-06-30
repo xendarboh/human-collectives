@@ -39,7 +39,7 @@ export const loader: LoaderFunction = async (args) => {
 };
 
 export const action: ActionFunction = async (args) => {
-  const { auth, isCreator, poll } = await common(args);
+  const { isCreator, poll } = await common(args);
   const formData = await args.request.formData();
 
   switch (formData.get("action")) {
@@ -49,7 +49,7 @@ export const action: ActionFunction = async (args) => {
           status: 403,
         });
       }
-      await deletePoll({ id: poll.id, creator: auth.user.id });
+      await deletePoll(poll.id);
       return redirect("/polls");
     }
 

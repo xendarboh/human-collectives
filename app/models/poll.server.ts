@@ -1,7 +1,8 @@
 import invariant from "tiny-invariant";
 
 import type { Choice } from "~/models/choice.server";
-import { db } from "~/db.server";
+import type { QueryOptions } from "~/db.server";
+import { db, defaultQueryOptions } from "~/db.server";
 import {
   deletePollChoices,
   getPollChoices,
@@ -18,17 +19,9 @@ export interface Poll {
   choices: Array<Choice>;
 }
 
-export interface PollQueryOptions {
-  validate: boolean;
-}
-
-export const defaultQueryOpts: PollQueryOptions = {
-  validate: true,
-};
-
 export const createPoll = async (
   data: any,
-  opts: PollQueryOptions = defaultQueryOpts
+  opts: QueryOptions = defaultQueryOptions
 ): Promise<[any, Poll | null]> => {
   const errors = opts.validate ? validatePoll(data) : undefined;
   if (errors) return [errors, null];
@@ -38,21 +31,21 @@ export const createPoll = async (
   const [{ id }] = await db.insert(pollData, ["id"]).into("polls");
   invariant(id, "Insert poll failed");
 
-  if (choices) await updatePollChoices(id, choices);
+  if (choices) await updatePollChoices(id, choices, { validate: false });
   return [errors, await getPoll({ id })];
 };
 
 export const updatePoll = async (
   id: number,
   data: Partial<Poll>,
-  opts: PollQueryOptions = defaultQueryOpts
+  opts: QueryOptions = defaultQueryOptions
 ): Promise<[any, Poll | null]> => {
   const errors = opts.validate ? validatePoll(data) : undefined;
   if (errors) return [errors, null];
 
   const { choices, ...pollData } = data;
   await db("polls").where({ id }).update(pollData);
-  if (choices) await updatePollChoices(id, choices);
+  if (choices) await updatePollChoices(id, choices, { validate: false });
   return [errors, await getPoll({ id })];
 };
 

@@ -1,5 +1,7 @@
 import invariant from "tiny-invariant";
-import { db } from "~/db.server";
+
+import type { QueryOptions } from "~/db.server";
+import { db, defaultQueryOptions } from "~/db.server";
 
 export interface Choice {
   id: number;
@@ -27,8 +29,12 @@ export const getPollChoices = async (pollId: number): Promise<Array<Choice>> =>
 // choices that do not yet exist in the database are given with id=0
 export const updatePollChoices = async (
   pollId: number,
-  choices: Array<Choice>
-): Promise<[any, Array<Choice>]> => {
+  choices: Array<Choice>,
+  opts: QueryOptions = defaultQueryOptions
+): Promise<[any, Array<Choice> | null]> => {
+  const errors = opts.validate ? validatePollChoices(choices) : undefined;
+  if (errors) return [errors, null];
+
   choices.forEach(async ({ id: choiceId, content }: Choice) => {
     if (choiceId > 0) {
       await db("choices").update({ content }).where({ id: choiceId });
