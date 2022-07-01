@@ -17,8 +17,11 @@ export const getChoices = async (
   query: Partial<Choice> | undefined = {}
 ): Promise<Choice[]> => await db.select().from<Choice>("choices").where(query);
 
-// select choices.id, choices.content from choices left join choice2poll ON
-// choices.id = choice2poll.choiceId where choice2poll.pollId = 11;
+// SELECT choices.*
+// FROM choices
+// LEFT JOIN choice2poll
+// ON choices.id = choice2poll.choiceId
+// WHERE choice2poll.pollId = ?;
 export const getPollChoices = async (pollId: number): Promise<Array<Choice>> =>
   await db("choices")
     .select("choices.*")
