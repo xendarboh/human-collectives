@@ -1,4 +1,4 @@
-import type { LoaderFunction } from "@remix-run/node";
+import type { LoaderFunction, MetaFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 
@@ -8,6 +8,12 @@ import { PollCard } from "~/ui/poll-card";
 
 type LoaderData = {
   polls: Array<Poll>;
+};
+
+export const meta: MetaFunction = () => {
+  return {
+    title: "Polls",
+  };
 };
 
 export const loader: LoaderFunction = async () => {
