@@ -2,6 +2,7 @@ import type {
   ActionFunction,
   DataFunctionArgs,
   LoaderFunction,
+  MetaFunction,
 } from "@remix-run/node";
 import invariant from "tiny-invariant";
 import { json, redirect } from "@remix-run/node";
@@ -12,14 +13,24 @@ import { CollectiveForm } from "~/ui/collective-form";
 import { createCollective } from "~/models/collective.server";
 import { requireAuthenticatedUser } from "~/auth.server";
 
+export const meta: MetaFunction = () => {
+  return {
+    title: "Create a Collective",
+  };
+};
+
 export const getCollectiveFormData = async ({ request }: DataFunctionArgs) => {
   const formData = await request.formData();
   const title = formData.get("title")?.toString();
   const description = formData.get("description")?.toString();
+  const isPublic = formData.get("isPublic") ? true : false;
+  const isOpenAccess = formData.get("isOpenAccess") ? true : false;
 
   const values = {
     title,
     description,
+    isPublic,
+    isOpenAccess,
   };
   return { values };
 };
@@ -50,7 +61,7 @@ export default function NewCollective() {
 
   return (
     <div>
-      <h1 className="pb-2 text-2xl font-bold">Create Collective</h1>
+      <h1 className="pb-2 text-2xl font-bold">Create a Collective</h1>
       <CollectiveForm method="post" actionData={actionData}></CollectiveForm>
     </div>
   );

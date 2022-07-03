@@ -2,6 +2,7 @@ import type {
   ActionFunction,
   DataFunctionArgs,
   LoaderFunction,
+  MetaFunction,
 } from "@remix-run/node";
 import invariant from "tiny-invariant";
 import { json, redirect } from "@remix-run/node";
@@ -12,6 +13,12 @@ import type { PollFormActionData } from "~/ui/poll-form";
 import { PollForm } from "~/ui/poll-form";
 import { createPoll } from "~/models/poll.server";
 import { requireAuthenticatedUser } from "~/auth.server";
+
+export const meta: MetaFunction = () => {
+  return {
+    title: "Create a Poll",
+  };
+};
 
 export const getPollFormData = async ({ request }: DataFunctionArgs) => {
   const formData = await request.formData();
@@ -61,7 +68,7 @@ export default function NewPoll() {
 
   return (
     <div>
-      <h1 className="pb-2 text-2xl font-bold">Create Poll</h1>
+      <h1 className="pb-2 text-2xl font-bold">Create a Poll</h1>
       <PollForm method="post" actionData={actionData}></PollForm>
     </div>
   );

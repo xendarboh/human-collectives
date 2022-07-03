@@ -12,13 +12,13 @@ type LoaderData = {
 
 export const meta: MetaFunction = () => {
   return {
-    title: "Collectives",
+    title: "Public Collectives",
   };
 };
 
 export const loader: LoaderFunction = async () => {
   return json({
-    collectives: await getCollectives(),
+    collectives: await getCollectives({ isPublic: true }),
   });
 };
 
@@ -27,7 +27,7 @@ export default function Collectives() {
 
   return (
     <main>
-      <h1 className="text-2xl font-bold">Collectives</h1>
+      <h1 className="text-2xl font-bold">Public Collectives</h1>
       <div className="grid place-items-center">
         {collectives.map((collective) => (
           <div key={collective.id} className="my-2">

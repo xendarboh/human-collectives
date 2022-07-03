@@ -15,6 +15,8 @@ export type Collective = {
   description: string;
   creator: number; // id of the user that created the collective
   accessCode: string; // code enabling members to join the collective
+  isOpenAccess: boolean; // members can register without accessCode?
+  isPublic: boolean; // visible to all? (or only members)
   created_at?: string;
   members?: Array<Omit<Member, "collectiveId">>;
 };
@@ -71,6 +73,10 @@ export const getCollective = async (
     members: await getCollectiveMembers(res.id),
   };
 };
+
+export const getCreatorCollectives = async (
+  userId: number
+): Promise<Collective[]> => await getCollectives({ creator: userId });
 
 export const isCollectiveCreator = (
   collective: Collective,

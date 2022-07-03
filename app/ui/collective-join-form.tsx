@@ -1,12 +1,13 @@
 import type { FormProps } from "@remix-run/react";
 import * as React from "react";
-import { Link, Form } from "@remix-run/react";
+import { Form } from "@remix-run/react";
 
 import type { Collective } from "~/models/collective.server";
 
 const CollectiveJoinForm = ({
   actionData,
   collective,
+  children,
   ...props
 }: CollectiveJoinFormProps) => {
   const accessCodeRef = React.useRef<HTMLInputElement>(null);
@@ -18,15 +19,17 @@ const CollectiveJoinForm = ({
   }, [actionData]);
 
   return (
-    <Form {...props} className="grid gap-2">
-      <div className="form-control w-full max-w-xs">
-        <label className="label">
-          <span className="label-text">Access Code:</span>
-        </label>
+    <Form {...props} className="grid gap-4">
+      <div className="form-control">
+        {!collective?.isOpenAccess && (
+          <label className="label">
+            <span className="label-text">Access Code:</span>
+          </label>
+        )}
         <input
           ref={accessCodeRef}
           name="accessCode"
-          type="text"
+          type={collective?.isOpenAccess ? "hidden" : "text"}
           className="input input-bordered input-primary w-full max-w-xs bg-primary-content"
           aria-invalid={actionData?.errors?.accessCode ? true : undefined}
           aria-errormessage={
@@ -43,18 +46,12 @@ const CollectiveJoinForm = ({
           </div>
         )}
       </div>
-
-      <div className="mt-8 flex gap-4">
+      <div className="flex gap-4">
         <button type="submit" className="btn btn-primary">
-          Submit
+          Join
         </button>
-        <Link
-          to={collective ? `/collectives/${collective.id}` : "/collectives/"}
-          className="btn btn-primary"
-        >
-          Cancel
-        </Link>
       </div>
+      {children}
     </Form>
   );
 };

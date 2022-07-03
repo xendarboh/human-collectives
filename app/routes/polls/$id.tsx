@@ -90,65 +90,67 @@ export default function PollDetailsPage() {
   return (
     <div>
       <h3 className="text-2xl font-bold">{poll.title}</h3>
-      <pre className="py-6">{poll.body}</pre>
-      {poll.isPublished && (
-        <div>
-          <div className="divider"></div>
-          <Form method="post">
-            <input type="hidden" name="action" value="vote" />
-            <div className="flex w-full flex-col lg:flex-row">
-              {poll.choices.map((choice, key) => (
-                <React.Fragment key={key}>
-                  {key > 0 && (
-                    <div className="divider lg:divider-horizontal">OR</div>
-                  )}
-                  <button
-                    type="submit"
-                    name="choice"
-                    value={choice.id}
-                    className={
-                      "btn grid h-24 flex-grow place-items-center border-2 bg-base-300 lg:max-w-md " +
-                      (choice.id == myVote.choiceId ? "btn-secondary" : "")
-                    }
-                  >
-                    {choice.content}
-                  </button>
-                </React.Fragment>
-              ))}
-            </div>
-          </Form>
-          <div className="divider"></div>
-        </div>
-      )}
-      {isCreator && !poll.isPublished && (
-        <div className="rounded-box border-2 border-base-content bg-base-300 p-2 shadow-md">
-          <div className="mb-2 text-lg font-bold">You are the Poll Creator</div>
-          <Form method="post">
-            <div className="flex gap-4">
-              <Link to="edit" className="btn btn-primary">
-                Edit
-              </Link>
-              <button
-                type="submit"
-                name="action"
-                value="publish"
-                className="btn btn-primary"
-              >
-                Publish
-              </button>
-              <button
-                type="submit"
-                name="action"
-                value="delete"
-                className="btn btn-warning"
-              >
-                Delete
-              </button>
-            </div>
-          </Form>
-          <pre>{JSON.stringify(poll, null, 2)}</pre>
-        </div>
-      )}
+      <div className="grid gap-4">
+        <pre className="py-6">{poll.body}</pre>
+        {poll.isPublished && (
+          <div>
+            <div className="divider"></div>
+            <Form method="post">
+              <input type="hidden" name="action" value="vote" />
+              <div className="flex w-full flex-col lg:flex-row">
+                {poll.choices.map((choice, key) => (
+                  <React.Fragment key={key}>
+                    {key > 0 && (
+                      <div className="divider lg:divider-horizontal">OR</div>
+                    )}
+                    <button
+                      type="submit"
+                      name="choice"
+                      value={choice.id}
+                      className={
+                        "btn grid h-24 flex-grow place-items-center border-2 bg-base-300 lg:max-w-md " +
+                        (choice.id == myVote.choiceId ? "btn-secondary" : "")
+                      }
+                    >
+                      {choice.content}
+                    </button>
+                  </React.Fragment>
+                ))}
+              </div>
+            </Form>
+            <div className="divider"></div>
+          </div>
+        )}
+        {isCreator && !poll.isPublished && (
+          <div className="rounded-box grid gap-4 border-2 border-base-content bg-base-300 p-4 shadow-md">
+            <div className="text-lg font-bold">You are the Poll Creator</div>
+            <Form method="post">
+              <div className="flex gap-4">
+                <Link to="edit" className="btn btn-primary">
+                  Edit
+                </Link>
+                <button
+                  type="submit"
+                  name="action"
+                  value="publish"
+                  className="btn btn-primary"
+                >
+                  Publish
+                </button>
+                <button
+                  type="submit"
+                  name="action"
+                  value="delete"
+                  className="btn btn-warning"
+                >
+                  Delete
+                </button>
+              </div>
+            </Form>
+            <pre>{JSON.stringify(poll, null, 2)}</pre>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

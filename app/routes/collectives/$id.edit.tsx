@@ -16,7 +16,6 @@ import {
   updateCollective,
   getCollective,
   isCollectiveCreator,
-  // ?: deleteCollectiveMembers,
 } from "~/models/collective.server";
 
 type LoaderData = {
@@ -46,10 +45,8 @@ export const loader: LoaderFunction = async (args) => {
 
 export const action: ActionFunction = async (args) => {
   const { collective } = await common(args);
-  // ?: const { values, membersRemoved } = await getCollectiveFormData(args);
   const { values } = await getCollectiveFormData(args);
   const [errors] = await updateCollective(+collective.id, values);
-  // ?: await deleteChoices(membersRemoved);
 
   if (errors)
     return json<CollectiveFormActionData>({ errors, values }, { status: 400 });

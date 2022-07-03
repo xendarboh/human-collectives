@@ -53,7 +53,10 @@ const Navbar = React.forwardRef<HTMLDivElement, NavbarProps>(
                 <span>Collectives</span>
               </li>
               <li className="hover-bordered" onClick={closeMenu}>
-                <Link to="/collectives">My Collectives</Link>
+                <Link to="/collectives">Collectives</Link>
+              </li>
+              <li className="hover-bordered" onClick={closeMenu}>
+                <Link to="/collectives/mine">My Collectives</Link>
               </li>
               <li className="hover-bordered" onClick={closeMenu}>
                 <Link to="/collectives/new">Create Collective</Link>
@@ -86,7 +89,7 @@ const Navbar = React.forwardRef<HTMLDivElement, NavbarProps>(
         </div>
         <div className="navbar-center">
           <Link to="/" className="btn btn-ghost text-xl normal-case">
-            Humans 4 Solutions
+            Human Collectives
           </Link>
         </div>
         <div className="navbar-end">

@@ -24,7 +24,7 @@ const CollectiveForm = ({
     <Form {...props} className="grid gap-2">
       <div className="form-control w-full max-w-xs">
         <label className="label">
-          <span className="label-text">Title:</span>
+          <span className="label-text">Title</span>
         </label>
         <input
           ref={titleRef}
@@ -69,6 +69,39 @@ const CollectiveForm = ({
         )}
       </div>
 
+      <div className="form-control flex flex-row items-center gap-4">
+        <label className="label cursor-pointer">
+          <span className="label-text w-24">Public?</span>
+        </label>
+        <input
+          type="checkbox"
+          name="isPublic"
+          defaultChecked={collective?.isPublic || actionData?.values?.isPublic}
+          className="checkbox checkbox-primary"
+        />
+        <span className="text-xs">
+          Public collectives are visible to all. Otherwise only visible to
+          members.
+        </span>
+      </div>
+
+      <div className="form-control flex flex-row items-center gap-4">
+        <label className="label cursor-pointer">
+          <span className="label-text w-24">Open Access?</span>
+        </label>
+        <input
+          type="checkbox"
+          name="isOpenAccess"
+          defaultChecked={
+            collective?.isOpenAccess || actionData?.values?.isOpenAccess
+          }
+          className="checkbox checkbox-primary"
+        />
+        <span className="text-xs">
+          If enabled, members can join without an access code.
+        </span>
+      </div>
+
       <div className="mt-8 flex gap-4">
         <button type="submit" className="btn btn-primary">
           Save
@@ -90,11 +123,15 @@ type CollectiveFormActionData = {
   errors?: {
     title?: string;
     description?: string;
+    isPublic?: string;
+    isOpenAccess?: string;
     members?: string;
   };
   values?: {
     title?: string;
     description?: string;
+    isPublic?: boolean;
+    isOpenAccess?: boolean;
     members?: Array<number>;
   };
 };

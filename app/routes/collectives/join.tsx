@@ -2,6 +2,7 @@ import type {
   ActionFunction,
   DataFunctionArgs,
   LoaderFunction,
+  MetaFunction,
 } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
 import { useActionData, useCatch } from "@remix-run/react";
@@ -10,6 +11,12 @@ import type { CollectiveJoinFormActionData } from "~/ui/collective-join-form";
 import { CollectiveJoinForm } from "~/ui/collective-join-form";
 import { joinCollective } from "~/models/member.server";
 import { requireAuthenticatedUser } from "~/auth.server";
+
+export const meta: MetaFunction = () => {
+  return {
+    title: "Join a Collective",
+  };
+};
 
 export const common = async ({ request }: DataFunctionArgs) => {
   const auth = await requireAuthenticatedUser(request);
