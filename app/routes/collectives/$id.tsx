@@ -8,6 +8,7 @@ import { Form, Link, useCatch, useLoaderData } from "@remix-run/react";
 import { json, redirect } from "@remix-run/node";
 
 import type { Collective } from "~/models/collective.server";
+import { isCollectiveMember, leaveCollective } from "~/models/member.server";
 import { requireAuthenticatedUser } from "~/auth.server";
 import {
   deleteCollective,
@@ -16,8 +17,9 @@ import {
 } from "~/models/collective.server";
 
 type LoaderData = {
-  isCreator: boolean;
   collective: Collective;
+  isCreator: boolean;
+  isMember: boolean;
 };
 
 export const common = async ({ params, request }: DataFunctionArgs) => {
@@ -28,15 +30,16 @@ export const common = async ({ params, request }: DataFunctionArgs) => {
   if (!collective) throw new Response("Collective Not Found", { status: 404 });
 
   const isCreator = isCollectiveCreator(collective, auth.user.id);
+  const isMember = await isCollectiveMember(collective, auth.user.id);
 
-  return { auth, collective, isCreator };
+  return { auth, collective, isCreator, isMember };
 };
 
 export const loader: LoaderFunction = async (args) =>
   json<LoaderData>(await common(args));
 
 export const action: ActionFunction = async (args) => {
-  const { isCreator, collective } = await common(args);
+  const { auth, collective, isCreator, isMember } = await common(args);
   const formData = await args.request.formData();
 
   switch (formData.get("action")) {
@@ -50,19 +53,18 @@ export const action: ActionFunction = async (args) => {
       return redirect("/collectives");
     }
 
-    // ?: case "publish": {
-    // ?:   if (!isCreator) {
-    // ?:     throw new Response("Only the collective creator can publish it", {
-    // ?:       status: 403,
-    // ?:     });
-    // ?:   }
-    // ?:   await updateCollective(
-    // ?:     collective.id,
-    // ?:     { isPublished: true },
-    // ?:     { validate: false }
-    // ?:   );
-    // ?:   return redirect(`/collectives/${collective.id}`);
-    // ?: }
+    case "leaveCollective": {
+      if (!isMember) {
+        throw new Response(
+          "Only a collective member can leave the collective",
+          {
+            status: 403,
+          }
+        );
+      }
+      await leaveCollective(collective.id, auth.user.id);
+      return null;
+    }
 
     default: {
       throw new Error("Unknown Action");
@@ -71,32 +73,39 @@ export const action: ActionFunction = async (args) => {
 };
 
 export default function CollectiveDetailsPage() {
-  const { isCreator, collective } = useLoaderData() as LoaderData;
+  const { collective, isCreator, isMember } = useLoaderData() as LoaderData;
 
   return (
     <div>
       <h3 className="text-2xl font-bold">{collective.title}</h3>
       <pre className="py-6">{collective.description}</pre>
-      <div>
-        <div className="divider"></div>
-        <Form method="post">
-          <input type="hidden" name="action" value="vote" />
-          <div className="flex w-full flex-col lg:flex-row">
-            {collective.members?.map((member, key) => (
-              <div key={key}>{member.nickname}</div>
-            ))}
-          </div>
-        </Form>
-        <div className="divider"></div>
-      </div>
+      {isMember && (
+        <div className="rounded-box mb-4 border-2 border-base-content bg-base-300 p-2 shadow-md">
+          <span className="text-lg font-bold">You are a Collective Member</span>
+          <Form method="post">
+            <div className="mt-2 flex gap-4">
+              <button
+                type="submit"
+                name="action"
+                value="leaveCollective"
+                className="btn btn-warning"
+              >
+                Leave
+              </button>
+            </div>
+          </Form>
+        </div>
+      )}
       {isCreator && (
-        <div>
-          <hr className="my-4" />
-          <div className="alert my-4 shadow-md">
+        <div className="rounded-box border-2 border-base-content bg-base-300 p-2 shadow-md">
+          <div className="text-lg font-bold">
+            You are the Collective Creator
+          </div>
+          <div className="alert mt-2 shadow-md">
             Membership Access Code: {collective.accessCode}
           </div>
           <Form method="post">
-            <div className="flex gap-4">
+            <div className="mt-4 flex gap-4">
               <Link to="edit" className="btn btn-primary">
                 Edit
               </Link>
@@ -110,7 +119,15 @@ export default function CollectiveDetailsPage() {
               </button>
             </div>
           </Form>
-          <pre>{JSON.stringify(collective, null, 2)}</pre>
+          {/*
+          <Form method="post">
+            <div className="flex w-full flex-col lg:flex-row">
+              {collective.members?.map((member, key) => (
+                <div key={key}>{member.userId}</div>
+              ))}
+            </div>
+          </Form>
+          */}
         </div>
       )}
     </div>

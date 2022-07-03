@@ -121,8 +121,8 @@ export default function PollDetailsPage() {
         </div>
       )}
       {isCreator && !poll.isPublished && (
-        <div>
-          <hr className="my-4" />
+        <div className="rounded-box border-2 border-base-content bg-base-300 p-2 shadow-md">
+          <div className="mb-2 text-lg font-bold">You are the Poll Creator</div>
           <Form method="post">
             <div className="flex gap-4">
               <Link to="edit" className="btn btn-primary">

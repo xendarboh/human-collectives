@@ -4,6 +4,10 @@ import { customAlphabet } from "nanoid";
 import type { Member } from "~/models/member.server";
 import type { QueryOptions } from "~/db.server";
 import { db, defaultQueryOptions } from "~/db.server";
+import {
+  deleteCollectiveMembers,
+  getCollectiveMembers,
+} from "~/models/member.server";
 
 export type Collective = {
   id: number;
@@ -49,7 +53,7 @@ export const updateCollective = async (
 
 export const deleteCollective = async (id: number) => {
   await db("collectives").where({ id }).del();
-  // ?: await deleteCollectiveMembers(id);
+  await deleteCollectiveMembers(id);
 };
 
 export const getCollectives = async (
@@ -64,14 +68,14 @@ export const getCollective = async (
   if (!res) return null;
   return {
     ...res,
-    // ?: members: await getCollectiveMembers(res.id),
+    members: await getCollectiveMembers(res.id),
   };
 };
 
 export const isCollectiveCreator = (
   collective: Collective,
-  userID: number
-): boolean => collective.creator === userID;
+  userId: number
+): boolean => collective.creator === userId;
 
 export const generateCollectiveAccessCode = (): Collective["accessCode"] => {
   const alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz";

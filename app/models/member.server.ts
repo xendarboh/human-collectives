@@ -35,6 +35,45 @@ export const getMember = async (
   return res;
 };
 
+export const isCollectiveMember = async (
+  collective: Collective,
+  userId: number
+): Promise<boolean> => {
+  const [res] = await db("members")
+    .select(["userId"])
+    .where({ userId, collectiveId: collective.id });
+  return res ? true : false;
+};
+
+// get the collectives that the given user is a member of
+// SELECT collectives.*
+// FROM collectives
+// LEFT JOIN members
+// on collectives.id = members.collectiveId
+// WHERE members.userId = ?;
+export const getMemberCollectives = async (
+  userId: number
+): Promise<Array<Collective>> =>
+  await db("collectives")
+    .select([
+      "collectives.id",
+      "collectives.title",
+      "collectives.description",
+      "collectives.creator",
+      "collectives.created_at",
+    ])
+    .leftJoin("members", "collectives.id", "=", "members.collectiveId")
+    .where({ userId });
+
+// get the members of the given collective
+export const getCollectiveMembers = async (
+  collectiveId: number
+): Promise<Array<Omit<Member, "collectiveId">>> =>
+  await db("members").select(["userId", "created_at"]).where({ collectiveId });
+
+export const deleteCollectiveMembers = async (collectiveId: number) =>
+  await db("members").where({ collectiveId }).del();
+
 export const validateMember = (x: any) => {
   if (!x || !x.userId || !x.collectiveId) return "member data required";
   return undefined;
@@ -66,7 +105,8 @@ export const joinCollective = async (
   return [undefined, member];
 };
 
-// TODO export const leaveCollective
+export const leaveCollective = async (collectiveId: number, userId: number) =>
+  await db("members").where({ userId, collectiveId }).del();
 
 export const validateJoinCollective = async (data: any) => {
   const errors = {
