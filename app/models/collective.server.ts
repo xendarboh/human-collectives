@@ -1,5 +1,7 @@
 import invariant from "tiny-invariant";
+import { customAlphabet } from "nanoid";
 
+import type { Member } from "~/models/member.server";
 import type { QueryOptions } from "~/db.server";
 import { db, defaultQueryOptions } from "~/db.server";
 
@@ -7,26 +9,16 @@ export type Collective = {
   id: number;
   title: string;
   description: string;
-  creator: number;
+  creator: number; // id of the user that created the collective
+  accessCode: string; // code enabling members to join the collective
   created_at?: string;
-  members?: Array<CollectiveMember>;
+  members?: Array<Omit<Member, "collectiveId">>;
 };
 
-export type CollectiveMember = {
-  id: number;
-  nickname: string;
-  // role: string;
-};
-
-export type user2collective = {
-  userId: number;
-  collectiveId: number;
-};
-
-export type poll2collective = {
-  pollId: number;
-  collectiveId: number;
-};
+// export type poll2collective = {
+//   pollId: number;
+//   collectiveId: number;
+// };
 
 export const createCollective = async (
   data: any,
@@ -35,7 +27,8 @@ export const createCollective = async (
   const errors = opts.validate ? validateCollective(data) : undefined;
   if (errors) return [errors, null];
 
-  const [{ id }] = await db("collectives").insert(data, ["id"]);
+  const values = { accessCode: generateCollectiveAccessCode(), ...data };
+  const [{ id }] = await db("collectives").insert(values, ["id"]);
   invariant(id, "Insert collective failed");
 
   return [undefined, { id }];
@@ -79,6 +72,12 @@ export const isCollectiveCreator = (
   collective: Collective,
   userID: number
 ): boolean => collective.creator === userID;
+
+export const generateCollectiveAccessCode = (): Collective["accessCode"] => {
+  const alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz";
+  const nanoid = customAlphabet(alphabet, 12);
+  return nanoid();
+};
 
 export const validateCollective = (data: any) => {
   const errors = {

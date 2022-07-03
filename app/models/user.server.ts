@@ -3,6 +3,7 @@ import { db } from "~/db.server";
 export type User = {
   id: number;
   bioid: string;
+  // ?: nickname: string;
 };
 
 export const createUser = async (

@@ -92,6 +92,9 @@ export default function CollectiveDetailsPage() {
       {isCreator && (
         <div>
           <hr className="my-4" />
+          <div className="alert my-4 shadow-md">
+            Membership Access Code: {collective.accessCode}
+          </div>
           <Form method="post">
             <div className="flex gap-4">
               <Link to="edit" className="btn btn-primary">
