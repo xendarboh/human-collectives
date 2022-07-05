@@ -1,3 +1,4 @@
+import type { SMTreeIdentifier, SMTree } from "../models/smt.server";
 import { SMT, newMemEmptyTrie } from "circomlibjs";
 import { createSMTree, getSMTree, updateSMTree } from "../models/smt.server";
 
@@ -26,12 +27,13 @@ const convert = (from: Nodes, fn: NodeConversionFunction): Nodes => {
   return to;
 };
 
-/*
+/**
  * Restore a Sparse Merkle Tree from the database.
- * @param key the identifier of the tree
+ *
+ * @param {SMTreeIdentifier} id identifier of the tree
  */
-export const restoreSMTree = async (key: string) => {
-  const res = await getSMTree({ key });
+export const restoreSMTree = async (id: SMTreeIdentifier) => {
+  const res = await getSMTree(id);
   if (!res) return null;
 
   const tmp = await newMemEmptyTrie();
@@ -42,21 +44,25 @@ export const restoreSMTree = async (key: string) => {
   return new SMT(db, db.root, tmp.hash0, tmp.hash1, tmp.F);
 };
 
-/*
+/**
  * Save a Sparse Merkle Tree to the database.
- * @param key the identifier of the tree
- * @parm db the in-memory database of the tree
+ *
+ * @param {Pick<SMTree, "type" | "key">} id identifier of the tree
+ * @param {SMTDB} db the in-memory database of the tree
  */
-export const saveSMTree = async (key: string, db: SMTDB) => {
-  const smt = await getSMTree({ key });
-  if (!smt) await createSMTree({ key });
+export const saveSMTree = async (
+  id: Pick<SMTree, "type" | "key">,
+  db: SMTDB
+) => {
+  const smt = await getSMTree(id);
+  if (!smt) await createSMTree(id);
 
   const nodes = convert(db.nodes, arr2hex);
 
-  await updateSMTree(
-    { key },
-    { root: arr2hex(db.root), nodes: JSON.stringify(nodes) }
-  );
+  await updateSMTree(id, {
+    root: arr2hex(db.root),
+    nodes: JSON.stringify(nodes),
+  });
 };
 
 // https://stackoverflow.com/a/55263004
@@ -65,6 +71,28 @@ export const arr2hex = (x: Uint8Array): string =>
 
 export const hex2arr = (x: string): Uint8Array =>
   Uint8Array.from(Buffer.from(x, "hex"));
+
+/**
+ * Convert a string into a number for use as a key or value in the SMT.
+ * Otherwise strings may fail with "can't convert to BigInt".
+ *
+ * 2022-07-05: https://gist.github.com/hyamamoto/fd435505d29ebfa3d9716fd2be8d42f0
+ *
+ * Returns a hash code for a string.
+ * (Compatible to Java's String.hashCode())
+ *
+ * The hash code for a string object is computed as
+ *     s[0]*31^(n-1) + s[1]*31^(n-2) + ... + s[n-1]
+ * using number arithmetic, where s[i] is the i th character
+ * of the given string, n is the length of the string,
+ * and ^ indicates exponentiation.
+ * (The hash value of the empty string is zero.)
+ *
+ * @param {string} str a string
+ * @return {number} a hash code value for the given string.
+ */
+export const hashCode = (str: string) =>
+  Array.from(str).reduce((s, c) => (Math.imul(31, s) + c.charCodeAt(0)) | 0, 0);
 
 // A Sparse Merkle Tree database, as provided to circomlibjs SMT implementation.
 // Adapted from

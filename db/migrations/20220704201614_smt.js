@@ -7,10 +7,11 @@ exports.up = function (knex) {
     if (!exists) {
       return knex.schema.createTable("smt", (table) => {
         table.increments();
-        table.string("key");
+        table.string("type");
+        table.bigint("key");
         table.string("root");
         table.text("nodes");
-        table.unique(["key"]);
+        table.unique(["type", "key"]);
       });
     }
   });

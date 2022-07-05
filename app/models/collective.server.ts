@@ -8,6 +8,7 @@ import {
   deleteCollectiveMembers,
   getCollectiveMembers,
 } from "~/models/member.server";
+import { getSMTree } from "./smt.server";
 
 export type Collective = {
   id: number;
@@ -19,6 +20,7 @@ export type Collective = {
   isPublic: boolean; // visible to all? (or only members)
   created_at?: string;
   members?: Array<Omit<Member, "collectiveId">>;
+  merkleRoot?: string;
 };
 
 // export type poll2collective = {
@@ -68,9 +70,11 @@ export const getCollective = async (
 ): Promise<Collective | null> => {
   const [res] = await db.select().from<Collective>("collectives").where(query);
   if (!res) return null;
+  const smt = await getSMTree({ type: "collective", key: res.id }, ["root"]);
   return {
     ...res,
     members: await getCollectiveMembers(res.id),
+    merkleRoot: smt?.root,
   };
 };
 

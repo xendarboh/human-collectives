@@ -6,11 +6,14 @@ import type {
 } from "@remix-run/node";
 import invariant from "tiny-invariant";
 import { json, redirect } from "@remix-run/node";
+import { nanoid } from "nanoid";
 import { useActionData } from "@remix-run/react";
 
 import type { CollectiveFormActionData } from "~/ui/collective-form";
 import { CollectiveForm } from "~/ui/collective-form";
 import { createCollective } from "~/models/collective.server";
+import { getSMTree } from "~/models/smt.server";
+import { hashCode, newSMTree, saveSMTree } from "~/utils/smt.server";
 import { requireAuthenticatedUser } from "~/auth.server";
 
 export const meta: MetaFunction = () => {
@@ -51,8 +54,18 @@ export const action: ActionFunction = async (args) => {
 
   if (errors)
     return json<CollectiveFormActionData>({ errors, values }, { status: 400 });
-
   invariant(collective, "Failed to create collective");
+
+  // create an SMT for the collective
+  // insert something random to initialize its root to non-zero
+  const type = "collective";
+  const key = collective.id;
+  const tree = await newSMTree();
+  await tree.insert(hashCode(type + key), hashCode(nanoid()));
+  await saveSMTree({ type, key }, tree.db);
+  const res = await getSMTree({ type, key });
+  invariant(res, "Failed to create collective's merkle tree");
+
   return redirect(`/collectives/${collective.id}`);
 };
 
