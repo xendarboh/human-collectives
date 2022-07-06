@@ -3,6 +3,7 @@ import invariant from "tiny-invariant";
 import type { Collective } from "~/models/collective.server";
 import type { QueryOptions } from "~/db.server";
 import { db, defaultQueryOptions } from "~/db.server";
+import { hashCode, restoreSMTree, saveSMTree } from "~/utils/smt.server";
 
 export type Member = {
   userId: number;
@@ -102,11 +103,26 @@ export const joinCollective = async (
   if (errors2) return [errors2, null];
   invariant(member, "Join collective failed");
 
+  // add member to the collective's SMT
+  const treeId = { type: "collective", key: collective.id };
+  const tree = await restoreSMTree(treeId);
+  await tree.insert(userId, hashCode("something?")); // TODO use humanode identifier vs userId
+  await saveSMTree(treeId, tree.db);
+
   return [undefined, member];
 };
 
-export const leaveCollective = async (collectiveId: number, userId: number) =>
+export const leaveCollective = async (collectiveId: number, userId: number) => {
   await db("members").where({ userId, collectiveId }).del();
+
+  // remove member from the collective's SMT
+  const treeId = { type: "collective", key: collectiveId };
+  const tree = await restoreSMTree(treeId);
+  const search = await tree.find(userId);
+  invariant(search.found === true, "Member not found in collective's SMT");
+  await tree.delete(userId); // TODO use humanode identifier vs userId
+  await saveSMTree(treeId, tree.db);
+};
 
 export const validateJoinCollective = async (data: any) => {
   const errors = {
