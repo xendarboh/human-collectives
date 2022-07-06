@@ -1,14 +1,15 @@
 import invariant from "tiny-invariant";
-import { customAlphabet } from "nanoid";
+import { customAlphabet, nanoid } from "nanoid";
 
 import type { Member } from "~/models/member.server";
 import type { QueryOptions } from "~/db.server";
 import { db, defaultQueryOptions } from "~/db.server";
+import { getSMTree } from "./smt.server";
+import { hashCode, newSMTree, saveSMTree } from "~/utils/smt.server";
 import {
   deleteCollectiveMembers,
   getCollectiveMembers,
 } from "~/models/member.server";
-import { getSMTree } from "./smt.server";
 
 export type Collective = {
   id: number;
@@ -39,7 +40,21 @@ export const createCollective = async (
   const [{ id }] = await db("collectives").insert(values, ["id"]);
   invariant(id, "Insert collective failed");
 
+  await initCollective(id);
+
   return [undefined, { id }];
+};
+
+// create an SMT for the collective
+// insert something random to initialize its root to non-zero
+export const initCollective = async (id: number) => {
+  const type = "collective";
+  const key = id;
+  const tree = await newSMTree();
+  await tree.insert(hashCode(type + key), hashCode(nanoid()));
+  await saveSMTree({ type, key }, tree.db);
+  const res = await getSMTree({ type, key });
+  invariant(res, "Failed to create collective's merkle tree");
 };
 
 export const updateCollective = async (

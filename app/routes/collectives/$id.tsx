@@ -114,6 +114,13 @@ export default function CollectiveDetailsPage() {
       <div className="grid gap-4">
         <pre className="py-6">{collective.description}</pre>
 
+        <div className="grid items-center gap-2">
+          <span className="witespace-nowrap">Current Merkle Tree Root:</span>
+          <span className="rounded-box border-2 border-neutral bg-base-200 p-2 px-3 shadow-md">
+            <Link to="smt.json">{collective.merkleRoot}</Link>
+          </span>
+        </div>
+
         {!isMember && (
           <div className="rounded-box grid gap-4 border-2 border-base-content bg-base-300 p-4 shadow-md">
             <div className="text-lg font-bold">Join this Collective</div>
@@ -180,7 +187,9 @@ export default function CollectiveDetailsPage() {
               </div>
             </Form>
           */}
-            <pre>{JSON.stringify(collective, null, 2)}</pre>
+            <pre className="whitespace-pre-line">
+              {JSON.stringify(collective, null, 2)}
+            </pre>
           </div>
         )}
       </div>
