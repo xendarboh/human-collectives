@@ -12,6 +12,7 @@ import {
   Scripts,
   ScrollRestoration,
   useLoaderData,
+  useMatches,
 } from "@remix-run/react";
 
 import type { AuthenticatedUser } from "~/auth.server";
@@ -40,6 +41,8 @@ export const meta: MetaFunction = () => ({
 
 export default function App() {
   const { auth, env } = useLoaderData() as LoaderData;
+  const matches = useMatches();
+
   return (
     <html lang="en">
       <head>
@@ -47,7 +50,9 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Navbar authenticated={auth !== null} env={env} />
+        {matches[1]?.id !== "routes/index" && (
+          <Navbar authenticated={auth !== null} env={env} />
+        )}
         <div className="px-10 pt-2">
           <Outlet />
         </div>

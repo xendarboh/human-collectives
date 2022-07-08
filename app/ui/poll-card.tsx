@@ -14,11 +14,13 @@ const PollCard = React.forwardRef<HTMLDivElement, PollCardProps>(
               <span className="text-xs">#{poll.id}</span>
             </div>
             <p>{poll.body}</p>
+            {/*
             <div className="card-actions justify-end">
               <div className="badge badge-outline">Fashion</div>
               <div className="badge badge-outline">Products</div>
               <div className="badge badge-secondary">NEW</div>
             </div>
+            */}
           </div>
         </Link>
       </div>

@@ -41,15 +41,6 @@ const Navbar = React.forwardRef<HTMLDivElement, NavbarProps>(
                 <Link to="/dashboard">Dashboard</Link>
               </li>
               <li className="menu-title">
-                <span>Polls</span>
-              </li>
-              <li className="hover-bordered" onClick={closeMenu}>
-                <Link to="/polls">List Polls</Link>
-              </li>
-              <li className="hover-bordered" onClick={closeMenu}>
-                <Link to="/polls/new">Create Poll</Link>
-              </li>
-              <li className="menu-title">
                 <span>Collectives</span>
               </li>
               <li className="hover-bordered" onClick={closeMenu}>
@@ -63,6 +54,15 @@ const Navbar = React.forwardRef<HTMLDivElement, NavbarProps>(
               </li>
               <li className="hover-bordered" onClick={closeMenu}>
                 <Link to="/collectives/join">Join Collective</Link>
+              </li>
+              <li className="menu-title">
+                <span>Polls</span>
+              </li>
+              <li className="hover-bordered" onClick={closeMenu}>
+                <Link to="/polls">List Polls</Link>
+              </li>
+              <li className="hover-bordered" onClick={closeMenu}>
+                <Link to="/polls/new">Create Poll</Link>
               </li>
               <li className="menu-title">
                 <span>Account</span>
