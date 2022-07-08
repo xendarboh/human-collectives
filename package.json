@@ -6,6 +6,7 @@
   "scripts": {
     "build": "run-s build:*",
     "build:css": "npm run generate:css -- --minify",
+    "build:db": "NODE_ENV=production npm run db:migrate",
     "build:remix": "remix build",
     "db:migrate": "cd db && npx knex migrate:latest",
     "dev": "run-p dev:*",
@@ -14,10 +15,10 @@
     "dev:remix": "remix dev",
     "generate:css": "npx tailwindcss -i ./styles/app.css -o ./app/tailwind.css",
     "lint": "eslint .",
-    "start": "remix-serve build",
+    "start": "dotenv -- remix-serve build",
     "test": "run-s test:*",
-    "test:db": "NODE_ENV=test npm run db:migrate",
-    "test:mocha": "ts-mocha test/**/*.ts"
+    "test:db": "dotenv -e .env.test -- npm run db:migrate",
+    "test:mocha": "dotenv -e .env.test -- ts-mocha test/**/*.ts"
   },
   "dependencies": {
     "@remix-run/node": "^1.3.5",
@@ -44,6 +45,7 @@
     "@types/react": "^17.0.24",
     "@types/react-dom": "^17.0.9",
     "chai": "^4.3.6",
+    "dotenv-cli": "^6.0.0",
     "eslint": "^8.11.0",
     "eslint-plugin-prettier": "^4.0.0",
     "mocha": "^10.0.0",

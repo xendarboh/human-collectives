@@ -74,16 +74,6 @@ const Navbar = React.forwardRef<HTMLDivElement, NavbarProps>(
                   <Link to="/login">Login</Link>
                 )}
               </li>
-              {env === "development" && (
-                <>
-                  <li className="menu-title">
-                    <span>Development</span>
-                  </li>
-                  <li className="hover-bordered" onClick={closeMenu}>
-                    <Link to="/dev/info">/dev/info</Link>
-                  </li>
-                </>
-              )}
             </ul>
           </div>
         </div>

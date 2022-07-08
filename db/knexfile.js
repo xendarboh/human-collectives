@@ -5,7 +5,7 @@ module.exports = {
   development: {
     client: "better-sqlite3",
     connection: {
-      filename: "dev.sqlite3",
+      filename: "../srv/dev.sqlite3",
     },
     useNullAsDefault: true,
   },
@@ -13,7 +13,15 @@ module.exports = {
   test: {
     client: "better-sqlite3",
     connection: {
-      filename: "test.sqlite3",
+      filename: "../srv/test.sqlite3",
+    },
+    useNullAsDefault: true,
+  },
+
+  production: {
+    client: "better-sqlite3",
+    connection: {
+      filename: "../srv/production.sqlite3",
     },
     useNullAsDefault: true,
   },
