@@ -38,3 +38,11 @@ docker-compose up -d
 ```
 
 ### Resources
+
+- [iden3/circomlib](https://github.com/iden3/circomlib): Library of basic
+  circuits for circom including Sparse Merkle Tree processor and verifier
+- [iden3/circomlibjs](https://github.com/iden3/circomlibjs): Javascript library
+  to work with circomlib circuits
+- [iden3/snarkjs](https://github.com/iden3/snarkjs#7-prepare-phase-2): zkSNARK
+  implementation in JavaScript & WASM, PowersOfTau files
+- https://github.com/iden3/circuits/blob/master/compile-circuit.sh
