@@ -16,7 +16,7 @@
     "generate:css": "npx tailwindcss -i ./styles/app.css -o ./app/tailwind.css",
     "lint": "eslint .",
     "start": "dotenv -- remix-serve build",
-    "test": "run-s test:*",
+    "test": "NODE_ENV=test run-s test:*",
     "test:db": "dotenv -e .env.test -- npm run db:migrate",
     "test:mocha": "dotenv -e .env.test -- ts-mocha test/**/*.ts"
   },
