@@ -83,7 +83,12 @@ export const saveSMTree = async (
  *
  * TODO: inform function caller if key is not found
  *
- * Reference: https://github.com/iden3/circomlib/blob/master/test/smtverifier.js
+ * Reference: 2022-07-10 https://github.com/iden3/circomlib/blob/master/test/smtverifier.js
+ *
+ * @param {SMTreeIdentifier} id identifier of the tree
+ * @param {any} key the key to prove is in the tree
+ * @param {number} numNodes Optional number of tree nodes
+ * @return {Promise<SMTTreeWitnessInput | null} witness input of the format for snarkjs.?.fullProve()
  */
 export const generateSMTreeInclusionWitnessInput = async (
   id: SMTreeIdentifier,
@@ -123,7 +128,12 @@ export const generateSMTreeInclusionWitnessInput = async (
  *
  * TODO: inform function caller if key is found
  *
- * Reference: https://github.com/iden3/circomlib/blob/master/test/smtverifier.js
+ * Reference: 2022-07-10 https://github.com/iden3/circomlib/blob/master/test/smtverifier.js
+ *
+ * @param {SMTreeIdentifier} id identifier of the tree
+ * @param {any} key the key to prove is not in the tree
+ * @param {number} numNodes Optional number of tree nodes
+ * @return {Promise<SMTTreeWitnessInput | null} witness input of the format for snarkjs.?.fullProve()
  */
 export const generateSMTreeExclusionWitnessInput = async (
   id: SMTreeIdentifier,
