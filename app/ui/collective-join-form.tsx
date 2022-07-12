@@ -37,7 +37,9 @@ const CollectiveJoinForm = ({
           }
           placeholder=""
           defaultValue={
-            collective?.accessCode || actionData?.values?.accessCode
+            collective?.isPublic
+              ? collective?.accessCode
+              : actionData?.values?.accessCode
           }
         />
         {actionData?.errors?.accessCode && (

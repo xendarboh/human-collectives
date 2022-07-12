@@ -11,11 +11,13 @@ import {
   useActionData,
   useCatch,
   useLoaderData,
+  useTransition,
 } from "@remix-run/react";
 
 import type { CollectiveJoinFormActionData } from "~/ui/collective-join-form";
 import type { Collective } from "~/models/collective.server";
 import { CollectiveJoinForm } from "~/ui/collective-join-form";
+import { ModalFormSubmission } from "~/ui/modal-form-submission";
 import { requireAuthenticatedUser } from "~/auth.server";
 import {
   isCollectiveMember,
@@ -47,6 +49,8 @@ export const common = async ({ params, request }: DataFunctionArgs) => {
 
   const isCreator = isCollectiveCreator(collective, auth.user.id);
   const isMember = await isCollectiveMember(collective, auth.user.id);
+
+  if (!collective.isOpenAccess && !isCreator) collective.accessCode = "";
 
   return { auth, collective, isCreator, isMember };
 };
@@ -107,6 +111,10 @@ export const action: ActionFunction = async (args) => {
 export default function CollectiveDetailsPage() {
   const { collective, isCreator, isMember } = useLoaderData() as LoaderData;
   const actionData = useActionData() as ActionData;
+  const transition = useTransition();
+
+  const isSubmitting =
+    transition.state === "submitting" || transition.state === "loading";
 
   return (
     <div>
@@ -195,6 +203,9 @@ export default function CollectiveDetailsPage() {
           </div>
         )}
       </div>
+      <ModalFormSubmission open={isSubmitting}>
+        <h3 className="text-lg font-bold">Processing... Please Wait.</h3>
+      </ModalFormSubmission>
     </div>
   );
 }
