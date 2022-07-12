@@ -4,14 +4,14 @@ import { assert } from "chai";
 import { buildBabyjub } from "circomlibjs";
 import { newSMTree } from "../app/utils/smt.server";
 
-// set this to drop-in our implementation while the below tests match the upstream
+// drop-in our SMT implementation
 const newMemEmptyTrie = newSMTree;
 
 ////////////////////////////////////////////////////////////////////////
 // These tests are from circomlibjs to test our adapted SMT implementation
 // 2022-07-03: https://github.com/iden3/circomlibjs/blob/main/test/smt.js
 ////////////////////////////////////////////////////////////////////////
-describe("SMT Javascript test", function () {
+describe("SMT Javascript test (circomlibjs)", function () {
   let Fr: any;
   this.timeout(100000);
   before(async () => {

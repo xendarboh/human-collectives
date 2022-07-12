@@ -5,17 +5,19 @@ import * as circom_tester from "circom_tester";
 
 import { newSMTree } from "../app/utils/smt.server";
 
-// set this to drop-in our implementation while the below tests match the upstream
+// drop-in our SMT implementation
 const newMemEmptyTrie = newSMTree;
 
 const wasm_tester = circom_tester.wasm;
 
-// function print(circuit, w, s) {
-//   console.log(s + ": " + w[circuit.getSignalIdx(s)]);
-// }
+const circuitFile = path.join(
+  __dirname,
+  "../zk/circuits",
+  "collective-verifier.circom"
+);
 
 ////////////////////////////////////////////////////////////////////////
-// These tests are from circomlib to test our adapted SMT implementation
+// These tests are from circomlib adapted to test our SMT implementation+circuit
 // 2022-07-08: https://github.com/iden3/circomlib/blob/master/test/smtverifier.js
 ////////////////////////////////////////////////////////////////////////
 
@@ -72,7 +74,7 @@ async function testExclusion(tree, _key, circuit) {
   await circuit.checkConstraints(w);
 }
 
-describe("ZK SMT Verifier test", function () {
+describe("SMT Verifier test (circomlib)", function () {
   let Fr: any;
   let circuit: any;
   let tree: any;
@@ -80,9 +82,7 @@ describe("ZK SMT Verifier test", function () {
   this.timeout(100000);
 
   before(async () => {
-    circuit = await wasm_tester(
-      path.join(__dirname, "zk-circuits", "smtverifier10_test.circom")
-    );
+    circuit = await wasm_tester(circuitFile);
 
     tree = await newMemEmptyTrie();
     Fr = tree.F;

@@ -2,6 +2,18 @@ import type { SMTreeIdentifier, SMTree } from "../models/smt.server";
 import { SMT, newMemEmptyTrie } from "circomlibjs";
 import { createSMTree, getSMTree, updateSMTree } from "../models/smt.server";
 
+export interface SMTTreeWitnessInput {
+  enabled: 1;
+  fnc: 0 | 1;
+  root: any;
+  siblings: any;
+  oldKey: 0 | any;
+  oldValue: 0 | any;
+  isOld0: 0 | 1;
+  key: any;
+  value: any;
+}
+
 type Nodes = {
   [key: string]: Array<string | Uint8Array>;
 };
@@ -63,6 +75,86 @@ export const saveSMTree = async (
     root: arr2hex(db.root),
     nodes: JSON.stringify(nodes),
   });
+};
+
+/**
+ * For a given SMTTree and lookup key, generate data for zksnark witness input
+ * for proof of inclusion.
+ *
+ * TODO: inform function caller if key is not found
+ *
+ * Reference: https://github.com/iden3/circomlib/blob/master/test/smtverifier.js
+ */
+export const generateSMTreeInclusionWitnessInput = async (
+  id: SMTreeIdentifier,
+  key: any,
+  numNodes: number = 10 // TODO: increase, abstract, manage both min and max
+): Promise<SMTTreeWitnessInput | null> => {
+  const tree = await restoreSMTree(id);
+  if (!tree) return null;
+
+  const _key = tree.F.e(key);
+  const res = await tree.find(_key);
+  if (!res) return null;
+
+  let siblings = res.siblings;
+  for (let i = 0; i < siblings.length; i++)
+    siblings[i] = tree.F.toObject(siblings[i]);
+  while (siblings.length < numNodes) siblings.push(0);
+
+  const input: SMTTreeWitnessInput = {
+    enabled: 1,
+    fnc: 0,
+    root: tree.F.toObject(tree.root),
+    siblings: siblings,
+    oldKey: 0,
+    oldValue: 0,
+    isOld0: 0,
+    key: tree.F.toObject(_key),
+    value: tree.F.toObject(res.foundValue),
+  };
+
+  return input;
+};
+
+/**
+ * For a given SMTTree and lookup key, generate data for zksnark witness input
+ * for proof of exclusion.
+ *
+ * TODO: inform function caller if key is found
+ *
+ * Reference: https://github.com/iden3/circomlib/blob/master/test/smtverifier.js
+ */
+export const generateSMTreeExclusionWitnessInput = async (
+  id: SMTreeIdentifier,
+  key: any,
+  numNodes: number = 10 // TODO: increase, abstract, manage both min and max
+): Promise<SMTTreeWitnessInput | null> => {
+  const tree = await restoreSMTree(id);
+  if (!tree) return null;
+
+  const _key = tree.F.e(key);
+  const res = await tree.find(_key);
+  if (!res) return null;
+
+  let siblings = res.siblings;
+  for (let i = 0; i < siblings.length; i++)
+    siblings[i] = tree.F.toObject(siblings[i]);
+  while (siblings.length < numNodes) siblings.push(0);
+
+  const input: SMTTreeWitnessInput = {
+    enabled: 1,
+    fnc: 1,
+    root: tree.F.toObject(tree.root),
+    siblings: siblings,
+    oldKey: res.isOld0 ? 0 : tree.F.toObject(res.notFoundKey),
+    oldValue: res.isOld0 ? 0 : tree.F.toObject(res.notFoundValue),
+    isOld0: res.isOld0 ? 1 : 0,
+    key: tree.F.toObject(_key),
+    value: 0,
+  };
+
+  return input;
 };
 
 // https://stackoverflow.com/a/55263004

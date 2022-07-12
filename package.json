@@ -18,7 +18,7 @@
     "start": "dotenv -- remix-serve build",
     "test": "NODE_ENV=test run-s test:*",
     "test:db": "dotenv -e .env.test -- npm run db:migrate",
-    "test:mocha": "dotenv -e .env.test -- ts-mocha test/**/*.ts"
+    "test:mocha": "dotenv -e .env.test -- ts-mocha test/**/*.ts --exit"
   },
   "dependencies": {
     "@remix-run/node": "^1.3.5",

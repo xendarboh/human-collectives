@@ -1,7 +1,6 @@
 import "mocha";
 import { assert } from "chai";
 
-import { db } from "../app/db.server";
 import { deleteSMTree, getSMTree } from "../app/models/smt.server";
 import {
   arr2hex,
@@ -75,7 +74,7 @@ describe("SMT Save & Restore", function () {
   it("Should remove the tree and clean up", async () => {
     await deleteSMTree(id);
     const res = await getSMTree(id);
-    await db.destroy();
+    // await db.destroy(); // not needed with `mocha --exit`
     assert.equal(res, null);
   });
 });
