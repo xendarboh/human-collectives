@@ -30,9 +30,9 @@ export const loader: LoaderFunction = async ({ request }) => {
 export default function Login() {
   const data = useLoaderData() as LoaderData;
   return (
-    <div>
+    <div className="mt-8 grid place-items-center">
       <Form action="/auth/humanode" method="post">
-        <button>Bioauthenticate with Humanode</button>
+        <button className="btn btn-primary">Authenticate with Humanode</button>
       </Form>
       <div>{data.error && <p>ERROR: {data.error?.message}</p>}</div>
     </div>

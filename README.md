@@ -152,6 +152,7 @@ docker-compose up -d
 - proof-of-consensus of collective (anonymous voting)
 - support developing DID standards, continue to abstract one-and-many identifiers
 - protect access to on-chain resources such as bio-authenticated crypto token vault
+- [Kwil Decentralized Database](https://kwil.com/) for SQL on blockchain
 
 ### What Else
 
