@@ -117,7 +117,9 @@ export default function CollectiveDetailsPage() {
         <div className="grid items-center gap-2">
           <span className="witespace-nowrap">Current Merkle Tree Root:</span>
           <span className="rounded-box border-2 border-neutral bg-base-200 p-2 px-3 shadow-md">
-            <Link to="smt.json">{collective.merkleRoot}</Link>
+            <Link to="data.json" reloadDocument>
+              {collective.merkleRoot}
+            </Link>
           </span>
         </div>
 
