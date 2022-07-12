@@ -20,7 +20,7 @@ const v2 = 444;
 const k3 = 555;
 const v3 = 666;
 
-const dirZKAssets = "public/zk/collective-verifier/";
+const DIR_ASSETS = "public";
 
 describe("Generate & Verify Proof of Collective", function () {
   this.timeout(7500);
@@ -46,14 +46,14 @@ describe("Generate & Verify Proof of Collective", function () {
     // NOTE: this causes mocha test to hang (maybe unclosed fs streams?)
     const { proof, publicSignals } = await snarkjs.groth16.fullProve(
       input,
-      dirZKAssets + "circuit.wasm",
-      dirZKAssets + "circuit_final.zkey"
+      DIR_ASSETS + "/zk/collective-verifier/circuit.wasm",
+      DIR_ASSETS + "/zk/collective-verifier/circuit_final.zkey"
     );
 
     // verify the proof
-    const vKey = JSON.parse(
-      fs.readFileSync(dirZKAssets + "verification_key.json").toString()
-    );
+    const vKeyFile =
+      DIR_ASSETS + "/zk/collective-verifier/verification_key.json";
+    const vKey = JSON.parse(fs.readFileSync(vKeyFile).toString());
     const verify = await snarkjs.groth16.verify(vKey, publicSignals, proof);
     assert.equal(verify, true);
   });
@@ -68,14 +68,14 @@ describe("Generate & Verify Proof of Collective", function () {
     // genreate a proof of exclusion
     const { proof, publicSignals } = await snarkjs.groth16.fullProve(
       input,
-      dirZKAssets + "circuit.wasm",
-      dirZKAssets + "circuit_final.zkey"
+      DIR_ASSETS + "/zk/collective-verifier/circuit.wasm",
+      DIR_ASSETS + "/zk/collective-verifier/circuit_final.zkey"
     );
 
     // verify the proof
-    const vKey = JSON.parse(
-      fs.readFileSync(dirZKAssets + "verification_key.json").toString()
-    );
+    const vKeyFile =
+      DIR_ASSETS + "/zk/collective-verifier/verification_key.json";
+    const vKey = JSON.parse(fs.readFileSync(vKeyFile).toString());
     const verif = await snarkjs.groth16.verify(vKey, publicSignals, proof);
     assert.equal(verif, true);
   });
