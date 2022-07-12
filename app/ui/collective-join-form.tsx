@@ -70,7 +70,7 @@ type CollectiveJoinFormActionData = {
 };
 
 interface CollectiveJoinFormProps extends FormProps {
-  actionData: CollectiveJoinFormActionData;
+  actionData?: CollectiveJoinFormActionData;
   collective?: Collective;
 }
 

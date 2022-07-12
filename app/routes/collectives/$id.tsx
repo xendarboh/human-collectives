@@ -14,8 +14,10 @@ import {
   useTransition,
 } from "@remix-run/react";
 
-import type { CollectiveJoinFormActionData } from "~/ui/collective-join-form";
 import type { Collective } from "~/models/collective.server";
+import type { CollectiveJoinFormActionData } from "~/ui/collective-join-form";
+import type { ProofOfCollective } from "~/models/proof.server";
+import { AlertError, AlertSuccess } from "~/ui/alerts";
 import { CollectiveJoinForm } from "~/ui/collective-join-form";
 import { ModalFormSubmission } from "~/ui/modal-form-submission";
 import { requireAuthenticatedUser } from "~/auth.server";
@@ -24,6 +26,11 @@ import {
   joinCollective,
   leaveCollective,
 } from "~/models/member.server";
+import {
+  getProofOfCollectiveExclusion,
+  getProofOfCollectiveInclusion,
+  verifyProofOfCollective,
+} from "~/models/proof.server";
 import {
   deleteCollective,
   getCollective,
@@ -37,7 +44,10 @@ type LoaderData = {
 };
 
 type ActionData = {
-  joinForm: CollectiveJoinFormActionData;
+  joinForm?: CollectiveJoinFormActionData;
+  proofOfExclusion?: ProofOfCollective;
+  proofOfInclusion?: ProofOfCollective;
+  proofVerification?: boolean;
 };
 
 export const common = async ({ params, request }: DataFunctionArgs) => {
@@ -102,6 +112,41 @@ export const action: ActionFunction = async (args) => {
       return null;
     }
 
+    case "proveInclusion": {
+      const proofOfInclusion = await getProofOfCollectiveInclusion(
+        collective.id,
+        auth.user.id
+      );
+      if (!proofOfInclusion)
+        throw new Response("Failed to generate Proof of Collective Inclusion", {
+          status: 500,
+        });
+      return json({ proofOfInclusion });
+    }
+
+    case "proveExclusion": {
+      const proofOfExclusion = await getProofOfCollectiveExclusion(
+        collective.id,
+        auth.user.id
+      );
+      if (!proofOfExclusion)
+        throw new Response("Failed to generate Proof of Collective Exclusion", {
+          status: 500,
+        });
+      return json({ proofOfExclusion });
+    }
+
+    case "verifyProof": {
+      const data = formData.get("proofToVerify")?.toString();
+      const proofToVerify = JSON.parse(data + "");
+      if (!proofToVerify)
+        throw new Response("Proof of Collective Verification Failed", {
+          status: 500,
+        });
+      const proofVerification = await verifyProofOfCollective(proofToVerify);
+      return json({ proofVerification });
+    }
+
     default: {
       throw new Error("Unknown Action");
     }
@@ -117,7 +162,7 @@ export default function CollectiveDetailsPage() {
     transition.state === "submitting" || transition.state === "loading";
 
   return (
-    <div>
+    <div className="mb-4">
       <h3 className="text-2xl font-bold">{collective.title}</h3>
       <div className="grid gap-4">
         <pre className="py-6">{collective.description}</pre>
@@ -133,7 +178,21 @@ export default function CollectiveDetailsPage() {
 
         {!isMember && (
           <div className="rounded-box grid gap-4 border-2 border-base-content bg-base-300 p-4 shadow-md">
-            <div className="text-lg font-bold">Join this Collective</div>
+            <div className="text-lg font-bold">
+              You are not a Collective Member
+            </div>
+            <Form method="post">
+              <div className="flex gap-4">
+                <button
+                  type="submit"
+                  name="action"
+                  value="proveExclusion"
+                  className="btn btn-primary"
+                >
+                  Prove It
+                </button>
+              </div>
+            </Form>
             <CollectiveJoinForm
               method="post"
               actionData={actionData?.joinForm}
@@ -152,6 +211,14 @@ export default function CollectiveDetailsPage() {
                 <button
                   type="submit"
                   name="action"
+                  value="proveInclusion"
+                  className="btn btn-primary"
+                >
+                  Prove It
+                </button>
+                <button
+                  type="submit"
+                  name="action"
                   value="leaveCollective"
                   className="btn btn-warning"
                 >
@@ -161,6 +228,59 @@ export default function CollectiveDetailsPage() {
             </Form>
           </div>
         )}
+
+        {!isMember && actionData?.proofOfExclusion && (
+          <div className="rounded-box grid gap-4 border-2 border-base-content bg-base-300 p-4 shadow-md">
+            <div className="text-lg font-bold">
+              Proof of Collective Exclusion
+            </div>
+            <div>{JSON.stringify(actionData.proofOfExclusion, null, 1)}</div>
+          </div>
+        )}
+
+        {isMember && actionData?.proofOfInclusion && (
+          <div className="rounded-box grid gap-4 border-2 border-base-content bg-base-300 p-4 shadow-md">
+            <div className="text-lg font-bold">
+              Proof of Collective Inclusion
+            </div>
+            <div>{JSON.stringify(actionData.proofOfInclusion, null, 1)}</div>
+          </div>
+        )}
+
+        <div className="rounded-box grid gap-4 border-2 border-base-content bg-base-300 p-4 shadow-md">
+          <div className="text-lg font-bold">Verify Proof of Collective</div>
+          {actionData?.proofVerification !== undefined && (
+            <>
+              {actionData.proofVerification === true ? (
+                <AlertSuccess>Verification Successful</AlertSuccess>
+              ) : (
+                <AlertError>Verification Failed</AlertError>
+              )}
+            </>
+          )}
+          <Form method="post">
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text">Proof to Verify</span>
+              </label>
+              <textarea
+                name="proofToVerify"
+                className="textarea textarea-bordered textarea-primary h-36 bg-primary-content"
+                placeholder=""
+              ></textarea>
+            </div>
+            <div className="mt-4 flex gap-4">
+              <button
+                type="submit"
+                name="action"
+                value="verifyProof"
+                className="btn btn-primary"
+              >
+                Verify
+              </button>
+            </div>
+          </Form>
+        </div>
 
         {isCreator && (
           <div className="rounded-box grid gap-4 border-2 border-base-content bg-base-300 p-4 shadow-md">
@@ -197,12 +317,15 @@ export default function CollectiveDetailsPage() {
               </div>
             </Form>
           */}
+            {/*
             <pre className="whitespace-pre-line">
               {JSON.stringify(collective, null, 2)}
             </pre>
+          */}
           </div>
         )}
       </div>
+
       <ModalFormSubmission open={isSubmitting}>
         <h3 className="text-lg font-bold">Processing... Please Wait.</h3>
       </ModalFormSubmission>
@@ -221,6 +344,7 @@ export function CatchBoundary() {
   switch (caught.status) {
     case 403:
     case 404:
+    case 500:
       return <div>{caught.data}</div>;
   }
 
