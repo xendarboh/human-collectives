@@ -47,4 +47,5 @@ template CollectiveVerifier(nLevels) {
     smtVerif.fnc <== fnc;
 }
 
-component main = CollectiveVerifier(10);
+// define public signals root and fnc, all others private
+component main {public [root,fnc]} = CollectiveVerifier(10);
