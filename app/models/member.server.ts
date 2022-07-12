@@ -5,12 +5,12 @@ import type { QueryOptions } from "~/db.server";
 import { db, defaultQueryOptions } from "~/db.server";
 import { hashCode, restoreSMTree, saveSMTree } from "~/utils/smt.server";
 
-export type Member = {
+export interface Member {
   userId: number;
   collectiveId: number;
   created_at?: string;
   // role: string;
-};
+}
 
 export const createMember = async (
   data: any,

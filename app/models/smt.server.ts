@@ -1,13 +1,13 @@
 import invariant from "tiny-invariant";
 import { db } from "../db.server";
 
-export type SMTree = {
+export interface SMTree {
   id: number;
   type: string; // "group" like collective, poll, etc
   key: number; // unique identifier together with type
   root: string; // Sparse Merkle Tree root hash
   nodes: string; // serialized merkle tree nodes
-};
+}
 
 export type SMTreeIdentifier =
   | Pick<SMTree, "id">

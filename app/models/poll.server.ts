@@ -19,6 +19,11 @@ export interface Poll {
   choices: Array<Choice>;
 }
 
+// export interface poll2collective {
+//   pollId: number;
+//   collectiveId: number;
+// }
+
 export const createPoll = async (
   data: any,
   opts: QueryOptions = defaultQueryOptions

@@ -11,7 +11,7 @@ import {
   getCollectiveMembers,
 } from "~/models/member.server";
 
-export type Collective = {
+export interface Collective {
   id: number;
   title: string;
   description: string;
@@ -22,12 +22,7 @@ export type Collective = {
   created_at?: string;
   members?: Array<Omit<Member, "collectiveId">>;
   merkleRoot?: string;
-};
-
-// export type poll2collective = {
-//   pollId: number;
-//   collectiveId: number;
-// };
+}
 
 export const createCollective = async (
   data: any,

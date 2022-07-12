@@ -1,10 +1,10 @@
 import { db } from "~/db.server";
 
-export type User = {
+export interface User {
   id: number;
   bioid: string;
   // ?: nickname: string;
-};
+}
 
 export const createUser = async (
   user: Omit<User, "id">
