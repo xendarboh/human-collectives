@@ -1,6 +1,8 @@
 #!/bin/bash
 
-# original src: https://raw.githubusercontent.com/iden3/circuits/master/compile-circuit.sh
+# This script performs the many steps to compile a circom circuit.
+# Requires circom executable to be installed.
+# original: 2022-07-09: https://raw.githubusercontent.com/iden3/circuits/master/compile-circuit.sh
 
 set -e
 
@@ -42,7 +44,25 @@ compile_and_ts() {
     time snarkjs zkey beacon circuit_0003.zkey circuit_final.zkey 0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f 10 -n="Final Beacon phase2"
     time snarkjs zkey verify circuit.r1cs "$PTAU" circuit_final.zkey
     time snarkjs zkey export verificationkey circuit_final.zkey verification_key.json
-    time snarkjs zkey export json circuit_final.zkey circuit_final.zkey.json
+
+
+    # 2022-07-09: This always fails.. regardless of circuit or ptau file(?)
+    #
+    # time snarkjs zkey export json circuit_final.zkey circuit_final.zkey.json
+    #
+    # + snarkjs zkey export json circuit_final.zkey circuit_final.zkey.json
+    #   [ERROR] snarkJS: TypeError: a.slice is not a function
+    #   at WasmField2.toString (node_modules/ffjavascript/build/main.cjs:4397:38)
+    #   at stringifyBigInts$2 (node_modules/ffjavascript/build/main.cjs:3416:18)
+    #   at node_modules/ffjavascript/build/main.cjs:3425:22
+    #   at Array.forEach (<anonymous>)
+    #   at stringifyBigInts$2 (node_modules/ffjavascript/build/main.cjs:3424:14)
+    #   at node_modules/ffjavascript/build/main.cjs:3425:22
+    #   at Array.forEach (<anonymous>)
+    #   at Object.stringifyBigInts$2 [as stringifyBigInts] (ffjavascript/build/main.cjs:3424:14)
+    #   at Object.zkeyExportJson [as action] (node_modules/snarkjs/build/cli.cjs:8409:49)
+    #   at async clProcessor (node_modules/snarkjs/build/cli.cjs:305:27)
+
 
     time snarkjs zkey export solidityverifier circuit_final.zkey verifier.sol
     set +x
@@ -58,8 +78,8 @@ fi
 set -u
 
 dir=$(readlink -f $(dirname $0))
-CIRCUIT="$(pwd)/$1"
-PTAU="$(pwd)/$2"
+CIRCUIT="$1"
+PTAU="$2"
 PATH="${dir}/../node_modules/.bin:$PATH"
 
 # npm ci
