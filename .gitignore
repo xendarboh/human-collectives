@@ -13,6 +13,9 @@ lerna-debug.log*
 .env
 /app/tailwind.css
 
+# zk circuit build files
+/public/zk/
+
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 

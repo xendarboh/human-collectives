@@ -21,4 +21,6 @@ RUN npm install
 
 ENV NODE_ENV=production
 
-CMD npm run build && npm run start
+CMD scripts/init-zk.sh \
+  && npm run build \
+  && npm run start
