@@ -16,7 +16,10 @@ import {
 
 import type { Collective } from "~/models/collective.server";
 import type { CollectiveJoinFormActionData } from "~/ui/collective-join-form";
-import type { ProofOfCollective } from "~/models/proof.server";
+import type {
+  ProofOfCollective,
+  ProofOfCollectiveVerification,
+} from "~/models/proof.server";
 import { AlertError, AlertSuccess } from "~/ui/alerts";
 import { CollectiveJoinForm } from "~/ui/collective-join-form";
 import { ModalFormSubmission } from "~/ui/modal-form-submission";
@@ -47,7 +50,7 @@ type ActionData = {
   joinForm?: CollectiveJoinFormActionData;
   proofOfExclusion?: ProofOfCollective;
   proofOfInclusion?: ProofOfCollective;
-  proofVerification?: boolean;
+  proofVerification?: ProofOfCollectiveVerification;
 };
 
 export const common = async ({ params, request }: DataFunctionArgs) => {
@@ -161,6 +164,12 @@ export default function CollectiveDetailsPage() {
   const isSubmitting =
     transition.state === "submitting" || transition.state === "loading";
 
+  let proofType = "Unknown";
+  if (actionData?.proofVerification?.publicSignals.fnc === 1)
+    proofType = "Exclusion";
+  if (actionData?.proofVerification?.publicSignals.fnc === 0)
+    proofType = "Inclusion";
+
   return (
     <div className="mb-4">
       <h3 className="text-2xl font-bold">{collective.title}</h3>
@@ -251,10 +260,14 @@ export default function CollectiveDetailsPage() {
           <div className="text-lg font-bold">Verify Proof of Collective</div>
           {actionData?.proofVerification !== undefined && (
             <>
-              {actionData.proofVerification === true ? (
-                <AlertSuccess>Verification Successful</AlertSuccess>
+              {actionData.proofVerification.isValid === true ? (
+                <AlertSuccess>
+                  Verification Successful for Collective {proofType}
+                </AlertSuccess>
               ) : (
-                <AlertError>Verification Failed</AlertError>
+                <AlertError>
+                  Verification Failed for Collective {proofType}
+                </AlertError>
               )}
             </>
           )}
