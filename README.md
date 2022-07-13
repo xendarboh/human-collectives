@@ -89,6 +89,18 @@ npm run dev
 
 Access [http://localhost:3000](http://localhost:3000) in a local browser.
 
+### Test
+
+```sh
+npm run test
+```
+
+### Lint
+
+```sh
+npm run lint
+```
+
 ### Docker for development
 
 The docker image includes all requirements, like circom, and may also be used
