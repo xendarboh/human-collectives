@@ -60,6 +60,51 @@ This project is a developing work-in-progress, not yet audited for large-scale
 or production deployments, expect breaking changes along the way to stable
 releases, use at own risk, etc.
 
+## Configuration
+
+Copy then edit the example environment file for installation specifics.
+
+```sh
+cp env.example .env
+```
+
+### Example Configuration
+
+```sh
+########################################################################
+# Node.js
+########################################################################
+
+# Humanode OAuth2 credentials
+AUTH_HUMANODE_CLIENT_ID="XXXXXXXXXXXXXXXXXXXXX"
+AUTH_HUMANODE_CLIENT_SECRET="XXXXXXXXXXXXXXXXXXXXXXXXXX"
+AUTH_HUMANODE_URI_CALLBACK="http://localhost:3000/callback"
+AUTH_HUMANODE_URI_ISSUER="https://auth.staging.oauth2.humanode.io/"
+AUTH_HUMANODE_URI_JWKS="https://auth.staging.oauth2.humanode.io/.well-known/jwks.json"
+
+# cookie session secret
+SESSION_SECRET="XXXXXXXXXXXXXX"
+
+# bypass bio-authentication for local development, set the given UserId
+# DEV_HACK_AUTHENTICATED_USER=1
+
+
+########################################################################
+# Docker
+########################################################################
+
+# top-level host directory for persisted files
+HOST_DIR=/srv
+
+# collectives
+HOSTNAME=example.com
+REPO=local
+TAG=latest
+
+# nginx-proxy
+# DEFAULT_EMAIL=admin@example.com
+```
+
 ## Development
 
 ### Requirements
@@ -71,7 +116,6 @@ releases, use at own risk, etc.
 ### Run
 
 ```sh
-cp env.example .env # edit for installation specifics
 npm install
 ```
 
@@ -101,21 +145,9 @@ npm run test
 npm run lint
 ```
 
-### Docker for development
-
-The docker image includes all requirements, like circom, and may also be used
-for development. For example:
-
-```sh
-cd docker
-docker-compose build
-docker run --rm -ti -v /srv/host/dir:/app/srv <image> /bin/bash
-```
-
 ## Production Deployment
 
 ```sh
-cp env.example .env # edit for installation specifics
 scripts/init-zk.sh
 npm run build
 npm run start
@@ -124,17 +156,42 @@ npm run start
 The app is powered by [Remix](https://remix.run/) which offers several
 deployment methods and templates.
 
-### Docker
+## Docker
 
-See included docker files for an option that can be run with
+### Optional Reverse Proxy with SSL
+
+For automated SSL certificate generation, start
 [nginx-proxy](https://github.com/nginx-proxy/nginx-proxy) and
-[acme-companion](https://github.com/nginx-proxy/acme-companion) for automated
-SSL certificate generation.
+[acme-companion](https://github.com/nginx-proxy/acme-companion) with:
 
 ```sh
-cp env.example .env # edit for installation specifics
-cd docker
-docker-compose up -d
+docker compose --profile proxy up -d
+```
+
+### for Production
+
+```sh
+docker compose --profile production up -d
+```
+
+### for Development
+
+The docker image includes all requirements, like circom, and may also be used
+for development. The source files will be mapped into the docker container as a
+volume and can be edited real-time from the host (although user/group
+permission side-effects could occur).
+
+To run the container(s), watching the logs:
+
+```sh
+docker compose --profile development up
+```
+
+To enter the running container in a separate terminal, for example:
+
+```sh
+docker exec -ti collectives /bin/bash
+cd /app
 ```
 
 ## API & Proof/Verification Assets

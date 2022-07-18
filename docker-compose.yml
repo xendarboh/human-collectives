@@ -1,0 +1,79 @@
+version: "3"
+
+services:
+  # extend-only base for collectives
+  collectives-base:
+    profiles: ["no-op"]
+    image: ${REPO}/collectives:${TAG}
+    network_mode: bridge
+    restart: always
+    build:
+      context: ../
+    ports:
+      - "3000:3000"
+
+  collectives:
+    profiles: ["production"]
+    extends:
+      service: collectives-base
+    container_name: ${HOSTNAME}
+    hostname: ${HOSTNAME}
+    volumes:
+      - ${HOST_DIR}/${HOSTNAME}:/app/srv
+    environment:
+      - NODE_ENV=production
+      - VIRTUAL_HOST=${HOSTNAME}
+      - LETSENCRYPT_HOST=${HOSTNAME}
+
+  collectives-dev:
+    profiles: ["development"]
+    extends:
+      service: collectives-base
+    container_name: collectives
+    hostname: localhost
+    volumes:
+      - ../:/app
+    environment:
+      - NODE_ENV=development
+      - npm_config_cache=/tmp/npm_cache
+    command: >
+      npm run dev
+
+  nginx-proxy:
+    profiles: ["proxy"]
+    container_name: nginx-proxy
+    image: nginxproxy/nginx-proxy:alpine
+    init: true
+    restart: unless-stopped
+    network_mode: bridge
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ${HOST_DIR}/nginx/certs:/etc/nginx/certs:ro
+      - ${HOST_DIR}/nginx/dhparam:/etc/nginx/dhparam
+      - ${HOST_DIR}/nginx/html:/usr/share/nginx/html
+      - ${HOST_DIR}/nginx/vhost.d:/etc/nginx/vhost.d
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      # - ./conf.d/my_proxy.conf:/etc/nginx/conf.d/my_proxy.conf:ro
+    environment:
+      - ENABLE_IPV6=true
+      - RESOLVERS=1.1.1.1
+
+  nginx-proxy-acme:
+    profiles: ["proxy"]
+    container_name: nginx-proxy-acme
+    image: nginxproxy/acme-companion
+    restart: unless-stopped
+    network_mode: bridge
+    volumes:
+      - ${HOST_DIR}/nginx/acme.sh:/etc/acme.sh:rw
+      - ${HOST_DIR}/nginx/certs:/etc/nginx/certs:rw
+      - ${HOST_DIR}/nginx/dhparam:/etc/nginx/dhparam
+      - ${HOST_DIR}/nginx/html:/usr/share/nginx/html
+      - ${HOST_DIR}/nginx/vhost.d:/etc/nginx/vhost.d
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # - ./conf.d/my_proxy.conf:/etc/nginx/conf.d/my_proxy.conf:ro
+    environment:
+      - DEFAULT_EMAIL
+      - NGINX_PROXY_CONTAINER=nginx-proxy
