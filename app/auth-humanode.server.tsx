@@ -1,3 +1,6 @@
+// A remix-auth strategy for humanode Oauth2
+// https://github.com/sergiodxa/remix-auth
+// TODO: publish as separate `remix-auth-humanode` node module
 import { OAuth2Strategy } from "remix-auth-oauth2";
 import type { StrategyVerifyCallback } from "remix-auth";
 import type {

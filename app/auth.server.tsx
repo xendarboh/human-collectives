@@ -3,7 +3,7 @@ import { Authenticator, AuthorizationError } from "remix-auth";
 import { redirect } from "@remix-run/node";
 
 import type { User } from "~/models/user.server";
-import { HumanodeStrategy } from "../src/remix-auth-humanode";
+import { HumanodeStrategy } from "~/auth-humanode.server";
 import { commitSession } from "~/session.server";
 import { createUser } from "~/models/user.server";
 import { getSession } from "~/session.server";
