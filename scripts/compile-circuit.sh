@@ -82,8 +82,10 @@ CIRCUIT="$1"
 PTAU="$2"
 PATH="${dir}/../node_modules/.bin:$PATH"
 
-# npm ci
-mkdir -p build
+# set build directory from env var, default to "build"
+dir_build=${dir_build:-build}
 
-cd build
+# npm ci
+mkdir -p ${dir_build}
+cd ${dir_build}
 compile_and_ts "$CIRCUIT"

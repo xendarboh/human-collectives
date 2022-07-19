@@ -7,12 +7,12 @@ Sybil-Resistance from [HUMΔNODE](https://humanode.io/).
 
 Human collectives are comprised of zero, one, or more unique living humans.
 
-**Inclusion**: Wtih zero-knowledge cryptographic proofs, a human can prove that
-they are a member of a particular collective (a group of humans) while
-remaining anonymous and not revealing any identifying information.
+**Inclusion**: (Membership) Wtih zero-knowledge cryptographic proofs, a human
+can prove that they are a member of a particular collective (a group of humans)
+while remaining anonymous and not revealing any identifying information.
 
-**Exclusion**: A human can also prove that they are not within a particular
-collective, without revealing their identity.
+**Exclusion**: (Non-Membership) A human can also prove that they are not within
+a particular collective, without revealing their identity.
 
 Other humans or automated systems can verify the proofs of collective inclusion
 or exclusion. Cryptographic assets are provided to generate and verify proofs
@@ -56,9 +56,7 @@ with zkSNARK circuits and tools provided by [iden3](https://github.com/iden3).
 
 ## Disclaimer
 
-This project is a developing work-in-progress, not yet audited for large-scale
-or production deployments, expect breaking changes along the way to stable
-releases, use at own risk, etc.
+This project is not yet ready for production deployments.
 
 ## Configuration
 

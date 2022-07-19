@@ -1,11 +1,9 @@
 #!/bin/bash
 
-# This script downloads a PowersOfTau file, compiles all the circom circuits
-# found with the circuit dir (with compile-circuit.sh), and installs their copies
-# the circuit assets to # be served through http(s).
-
-# full path of this scripts directory
-dir=$(readlink -f $(dirname $0))
+# This script will:
+# - download (and cache for subsequent invocations) a PowersOfTau file
+# - compile all circom circuits within the circuit dir (with compile-circuit.sh)
+# - install circuit assets to be served through http(s), compiled, or otherwise deployed
 
 # full path of the project root directory
 root=$(readlink -f $(dirname $0))/..
@@ -16,7 +14,13 @@ dir_public="${root}/public"
 # directory of circom circuits to build
 dir_circuits="${root}/zk/circuits"
 
-# Powers of Tau saved file location
+# directory of compiled circom circuits
+dir_build="${root}/zk/build"
+
+# directory for circuit verifier contract libraries
+dir_lib="${root}/contracts/lib"
+
+# Powers of Tau saved file location (in docker host volume)
 file_ptau="${root}/srv/ptau.ptau"
 
 # According to snarkJS, the circom circuit we are compiling has 4064 constraints,
@@ -31,24 +35,40 @@ file_ptau="${root}/srv/ptau.ptau"
 # [INFO]  snarkJS: # of Labels: 12610
 # [INFO]  snarkJS: # of Outputs: 1
 
-# download, and cache into docker host volume, the ptau file
+# download and cache the ptau file
 test -f ${file_ptau} \
   || wget -O ${file_ptau} https://hermez.s3-eu-west-1.amazonaws.com/powersOfTau28_hez_final_13.ptau
 
-cd ${dir}
+# export build directory for circuit compiler script
+export dir_build=${dir_build}
+
+# compile all the circuits
 for circuit in $(ls ${dir_circuits}/*.circom)
 do
   # build the circuit
-  ./compile-circuit.sh ${circuit} ${file_ptau}
+  ${root}/scripts/compile-circuit.sh ${circuit} ${file_ptau}
 
   # copy the circuit assets to be served through http(s)
   c=$(basename "${circuit}" .circom)
   d="${dir_public}/zk/${c}"
   mkdir -p "${d}"
   cp -av \
-    "build/${c}/circuit.wasm" \
-    "build/${c}/circuit_final.zkey" \
-    "build/${c}/verification_key.json" \
-    "build/${c}/verifier.sol" \
+    "${dir_build}/${c}/circuit.wasm" \
+    "${dir_build}/${c}/circuit_final.zkey" \
+    "${dir_build}/${c}/verification_key.json" \
+    "${dir_build}/${c}/verifier.sol" \
     "${d}"
 done
+
+# add .sol file(s) as contract library
+# - update soldity version
+# - assign more specific name
+# - format with prettier
+mkdir -p ${dir_lib}
+cat "${dir_build}/collective-verifier/verifier.sol" \
+  | sed -e 's/0.6.11/0.8.9/' \
+  | sed -e 's/contract Verifier/contract CollectiveVerifier/' \
+  | npx prettier \
+    --parser solidity-parse \
+    --stdin-filepath ./x.sol \
+  > ${dir_lib}/CollectiveVerifier.sol
