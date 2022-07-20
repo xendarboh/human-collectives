@@ -17,7 +17,7 @@
     "generate:css": "npx tailwindcss -i ./styles/app.css -o ./app/tailwind.css",
     "lint": "run-s lint:*",
     "lint:eslint": "eslint .",
-    "lint:solhint": "solhint contracts/**/*.sol",
+    "lint:solhint": "solhint 'contracts/**/*.sol'",
     "start": "dotenv -- remix-serve build",
     "test": "NODE_ENV=test run-s test:*",
     "test:db": "dotenv -e .env.test -- npm run db:migrate",

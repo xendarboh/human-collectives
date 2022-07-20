@@ -17,6 +17,9 @@ dir_circuits="${root}/zk/circuits"
 # directory of compiled circom circuits
 dir_build="${root}/zk/build"
 
+# directory for circuit verifier contract libraries
+dir_lib="${root}/contracts/lib"
+
 # Powers of Tau saved file location (in docker host volume)
 file_ptau="${root}/srv/ptau.ptau"
 
@@ -39,6 +42,7 @@ test -f ${file_ptau} \
 # export build directory for circuit compiler script
 export dir_build=${dir_build}
 
+# compile all the circuits
 for circuit in $(ls ${dir_circuits}/*.circom)
 do
   # build the circuit
@@ -55,3 +59,16 @@ do
     "${dir_build}/${c}/verifier.sol" \
     "${d}"
 done
+
+# add .sol file(s) as contract library
+# - update soldity version
+# - assign more specific name
+# - format with prettier
+mkdir -p ${dir_lib}
+cat "${dir_build}/collective-verifier/verifier.sol" \
+  | sed -e 's/0.6.11/0.8.9/' \
+  | sed -e 's/contract Verifier/contract CollectiveVerifier/' \
+  | npx prettier \
+    --parser solidity-parse \
+    --stdin-filepath ./x.sol \
+  > ${dir_lib}/CollectiveVerifier.sol

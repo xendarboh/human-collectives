@@ -1,4 +1,5 @@
 // 2022-07-19: from `npx hardhat` project generator
+// solhint-disable not-rely-on-time
 
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.9;
