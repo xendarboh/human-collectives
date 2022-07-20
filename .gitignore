@@ -15,6 +15,7 @@ lerna-debug.log*
 
 # zk circuit build files
 /public/zk/
+/zk/build/
 
 # hardhat generated files
 artifacts
