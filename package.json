@@ -57,6 +57,7 @@
     "circom_tester": "^0.0.14",
     "dotenv-cli": "^6.0.0",
     "eslint": "^8.11.0",
+    "eslint-plugin-chai-friendly": "^0.7.2",
     "eslint-plugin-prettier": "^4.0.0",
     "hardhat": "^2.10.1",
     "mocha": "^10.0.0",

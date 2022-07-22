@@ -49,7 +49,6 @@ describe("Contract: CollectiveVerifier", function () {
     const Verifier = await ethers.getContractFactory("CollectiveVerifier");
     verifier = await Verifier.deploy();
     await verifier.deployed();
-    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     expect(verifier.address).to.be.properAddress;
   });
 
@@ -63,7 +62,6 @@ describe("Contract: CollectiveVerifier", function () {
         ).revertedWith(test.errorMessage);
       } else {
         const verified = await verifier.verifyProof(a, b, c, input);
-        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
         expect(verified).to.be.true;
       }
     });
