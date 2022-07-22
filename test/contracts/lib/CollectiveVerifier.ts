@@ -1,34 +1,11 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 
-import type { BigNumberish } from "ethers";
 import type { CollectiveVerifier } from "typechain";
-
-// 2022-07-21 https://stackoverflow.com/questions/69085499/typescript-convert-tuple-type-to-object/70398429#70398429
-type TupleToObject<T extends any[]> = Omit<T, keyof any[]>;
-type TupleToObjectWithPropNames<
-  T extends any[],
-  N extends Record<keyof TupleToObject<T>, PropertyKey>
-> = { [K in keyof TupleToObject<T> as N[K]]: T[K] };
-
-export type VerificationInfo = TupleToObjectWithPropNames<
-  Parameters<CollectiveVerifier["verifyProof"]>,
-  ["a", "b", "c", "input", "overrides"]
->;
-
-export interface Proof {
-  proof: {
-    pi_a: Array<BigNumberish>;
-    pi_b: Array<Array<BigNumberish>>;
-    pi_c: Array<BigNumberish>;
-    protocol: string;
-    curve: string;
-  };
-  publicSignals: [BigNumberish, BigNumberish, BigNumberish];
-}
+import type { Proof, ProofVerification } from "types";
 
 // Reference: 2022-07-20 https://github.com/iden3/contracts/blob/master/test/mtp/utils.ts
-export function prepareInputs(json: Proof): VerificationInfo {
+export function prepareSolidityProofInput(json: Proof): ProofVerification {
   const { proof, publicSignals } = json;
   const { pi_a, pi_b, pi_c } = proof;
   const [[p1, p2], [p3, p4]] = pi_b;
@@ -79,7 +56,7 @@ describe("Contract: CollectiveVerifier", function () {
   for (const test of tests) {
     // eslint-disable-next-line no-loop-func
     it(test.name, async () => {
-      const { a, b, c, input } = prepareInputs(test.proofJSON);
+      const { a, b, c, input } = prepareSolidityProofInput(test.proofJSON);
       if (test.errorMessage) {
         (
           expect(verifier.verifyProof(a, b, c, input)).to.be as any
