@@ -1,35 +1,46 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 
+import type { BigNumberish } from "ethers";
 import type { CollectiveVerifier } from "typechain";
 
-export interface VerificationInfo {
-  inputs: Array<string>;
-  pi_a: Array<string>;
-  pi_b: Array<Array<string>>;
-  pi_c: Array<string>;
+// 2022-07-21 https://stackoverflow.com/questions/69085499/typescript-convert-tuple-type-to-object/70398429#70398429
+type TupleToObject<T extends any[]> = Omit<T, keyof any[]>;
+type TupleToObjectWithPropNames<
+  T extends any[],
+  N extends Record<keyof TupleToObject<T>, PropertyKey>
+> = { [K in keyof TupleToObject<T> as N[K]]: T[K] };
+
+export type VerificationInfo = TupleToObjectWithPropNames<
+  Parameters<CollectiveVerifier["verifyProof"]>,
+  ["a", "b", "c", "input", "overrides"]
+>;
+
+export interface Proof {
+  proof: {
+    pi_a: Array<BigNumberish>;
+    pi_b: Array<Array<BigNumberish>>;
+    pi_c: Array<BigNumberish>;
+    protocol: string;
+    curve: string;
+  };
+  publicSignals: [BigNumberish, BigNumberish, BigNumberish];
 }
 
-// const x: CollectiveVerifier['verifyProof'] = null;
-
-// export type VerificationInfo = CollectiveVerifier['verifyProof'];
-
 // Reference: 2022-07-20 https://github.com/iden3/contracts/blob/master/test/mtp/utils.ts
-export function prepareInputs(json: any): VerificationInfo {
-  // export function prepareInputs(json: any): VerificationInfo {
+export function prepareInputs(json: Proof): VerificationInfo {
   const { proof, publicSignals } = json;
   const { pi_a, pi_b, pi_c } = proof;
   const [[p1, p2], [p3, p4]] = pi_b;
-  const preparedProof = {
-    pi_a: pi_a.slice(0, 2),
-    pi_b: [
+  return {
+    a: [pi_a[0], pi_a[1]],
+    b: [
       [p2, p1],
       [p4, p3],
     ],
-    pi_c: pi_c.slice(0, 2),
+    c: [pi_c[0], pi_c[1]],
+    input: publicSignals,
   };
-
-  return { inputs: publicSignals, ...preparedProof };
 }
 
 const tests = [
@@ -66,16 +77,16 @@ describe("Contract: CollectiveVerifier", function () {
   });
 
   for (const test of tests) {
+    // eslint-disable-next-line no-loop-func
     it(test.name, async () => {
-      const { inputs, pi_a, pi_b, pi_c } = prepareInputs(test.proofJSON);
-
+      const { a, b, c, input } = prepareInputs(test.proofJSON);
       if (test.errorMessage) {
         (
-          expect(verifier.verifyProof(pi_a, pi_b, pi_c, inputs)).to.be as any
+          expect(verifier.verifyProof(a, b, c, input)).to.be as any
         ).revertedWith(test.errorMessage);
       } else {
-        const verified = await verifier.verifyProof(pi_a, pi_b, pi_c, inputs);
-        // console.log("verified", verified);
+        const verified = await verifier.verifyProof(a, b, c, input);
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
         expect(verified).to.be.true;
       }
     });
