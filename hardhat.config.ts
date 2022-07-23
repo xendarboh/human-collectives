@@ -1,9 +1,8 @@
 import type { HardhatUserConfig } from "hardhat/config";
-import "@nomicfoundation/hardhat-chai-matchers";
+
+// hardhat-toolbox includes several other hardhat plugins
+// https://hardhat.org/hardhat-runner/plugins/nomicfoundation-hardhat-toolbox
 import "@nomicfoundation/hardhat-toolbox";
-import "@nomiclabs/hardhat-ethers";
-import "@typechain/hardhat";
-import "solidity-coverage";
 
 const config: HardhatUserConfig = {
   solidity: "0.8.9",

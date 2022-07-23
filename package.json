@@ -9,6 +9,7 @@
     "build:db": "NODE_ENV=production npm run db:migrate",
     "build:hardhat": "npx hardhat compile",
     "build:remix": "remix build",
+    "coverage:solidity": "hardhat clean && NODE_ENV=test TS_NODE_TRANSPILE_ONLY=1 hardhat coverage",
     "db:migrate": "cd db && npx knex migrate:latest",
     "dev": "run-p dev:*",
     "dev:css": "npm run generate:css -- --watch",

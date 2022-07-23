@@ -1,10 +1,12 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 
-import type { CollectiveVerifier } from "typechain";
-import type { Proof, ProofVerification } from "types";
+import type { CollectiveVerifier } from "../../../typechain";
+import type { Proof, ProofVerification } from "../../../types";
 
-// Reference: 2022-07-20 https://github.com/iden3/contracts/blob/master/test/mtp/utils.ts
+// References:
+// 2022-07-20 https://github.com/iden3/contracts/blob/master/test/mtp/utils.ts
+// 2022-07-20 https://github.com/enricobottazzi/ZK-SBT/blob/99987bb85d6bef6826856af4319a74a5b543de18/node_builder/solidity-proof-builder.js
 export function prepareSolidityProofInput(json: Proof): ProofVerification {
   const { proof, publicSignals } = json;
   const { pi_a, pi_b, pi_c } = proof;
@@ -41,7 +43,7 @@ const tests = [
   },
 ];
 
-describe("Contract: CollectiveVerifier", function () {
+describe("[solidity] CollectiveVerifier", function () {
   this.timeout(100000);
   let verifier: CollectiveVerifier;
 
@@ -60,6 +62,11 @@ describe("Contract: CollectiveVerifier", function () {
         (
           expect(verifier.verifyProof(a, b, c, input)).to.be as any
         ).revertedWith(test.errorMessage);
+
+        // this does not work...
+        // await expect(verifier.verifyProof(a, b, c, input)).to.be.revertedWith(
+        //   test.errorMessage
+        // );
       } else {
         const verified = await verifier.verifyProof(a, b, c, input);
         expect(verified).to.be.true;

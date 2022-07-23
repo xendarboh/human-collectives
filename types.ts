@@ -1,6 +1,6 @@
 import type { BigNumberish } from "ethers";
 
-import type { CollectiveVerifier } from "typechain";
+import type { CollectiveVerifier } from "./typechain";
 
 // https://stackoverflow.com/questions/69085499/typescript-convert-tuple-type-to-object/70398429#70398429
 type TupleToObject<T extends any[]> = Omit<T, keyof any[]>;
