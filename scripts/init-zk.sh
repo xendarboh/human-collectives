@@ -63,11 +63,13 @@ done
 # add .sol file(s) as contract library
 # - update soldity version
 # - assign more specific name
+# - disable some solhint rules
 # - format with prettier
 mkdir -p ${dir_lib}
 cat "${dir_build}/collective-verifier/verifier.sol" \
   | sed -e 's/0.6.11/0.8.9/' \
   | sed -e 's/contract Verifier/contract CollectiveVerifier/' \
+  | sed -e '1s|^|// solhint-disable no-inline-assembly, func-name-mixedcase, var-name-mixedcase\n|' \
   | npx prettier \
     --parser solidity-parse \
     --stdin-filepath ./x.sol \
