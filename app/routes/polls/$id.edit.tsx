@@ -7,15 +7,20 @@ import { json, redirect } from "@remix-run/node";
 import { useActionData, useCatch, useLoaderData } from "@remix-run/react";
 import invariant from "tiny-invariant";
 
+import type { Collective } from "~/models/collective.server";
 import type { Poll } from "~/models/poll.server";
 import type { PollFormActionData } from "~/ui/poll-form";
 import { PollForm } from "~/ui/poll-form";
 import { deleteChoices } from "~/models/choice.server";
+import { getCollective } from "~/models/collective.server";
+import { getMemberCollectives } from "~/models/member.server";
 import { getPollFormData } from "~/routes/polls/new";
 import { requireAuthenticatedUser } from "~/auth.server";
 import { updatePoll, getPoll, isPollCreator } from "~/models/poll.server";
 
 type LoaderData = {
+  collectives: Array<Collective>;
+  collective: Collective;
   poll: Poll;
 };
 
@@ -26,18 +31,22 @@ export const common = async ({ params, request }: DataFunctionArgs) => {
   const poll = await getPoll({ id: +params.id });
   if (!poll) throw new Response("Poll Not Found", { status: 404 });
 
+  const collective = await getCollective({ id: poll.collective });
+  if (!collective) throw new Response("Collective Not Found", { status: 404 });
+
   if (!isPollCreator(poll, auth.user.id)) {
     throw new Response("Access Denied: Only poll creator can edit", {
       status: 403,
     });
   }
 
-  return { auth, poll };
+  return { auth, collective, poll };
 };
 
 export const loader: LoaderFunction = async (args) => {
-  const { poll } = await common(args);
-  return json<LoaderData>({ poll });
+  const { auth, collective, poll } = await common(args);
+  const collectives = await getMemberCollectives(auth.user.id);
+  return json<LoaderData>({ collectives, collective, poll });
 };
 
 export const action: ActionFunction = async (args) => {
@@ -54,12 +63,18 @@ export const action: ActionFunction = async (args) => {
 
 export default function EditPoll() {
   const actionData = useActionData() as PollFormActionData;
-  const { poll } = useLoaderData() as LoaderData;
+  const { collective, collectives, poll } = useLoaderData() as LoaderData;
 
   return (
     <div>
       <h1 className="pb-2 text-2xl font-bold">Edit Poll</h1>
-      <PollForm method="post" actionData={actionData} poll={poll}></PollForm>
+      <PollForm
+        method="post"
+        actionData={actionData}
+        collective={collective}
+        collectives={collectives}
+        poll={poll}
+      ></PollForm>
     </div>
   );
 }

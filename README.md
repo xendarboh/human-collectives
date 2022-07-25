@@ -143,6 +143,15 @@ npm run test
 npm run lint
 ```
 
+### Database
+
+#### Migrations
+
+```sh
+cd db
+npx knex migrate:make <name>
+```
+
 ## Production Deployment
 
 ```sh

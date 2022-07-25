@@ -16,13 +16,9 @@ export interface Poll {
   body: string;
   creator: number;
   isPublished: boolean;
+  collective: number;
   choices: Array<Choice>;
 }
-
-// export interface poll2collective {
-//   pollId: number;
-//   collectiveId: number;
-// }
 
 export const createPoll = async (
   data: any,
@@ -82,6 +78,7 @@ export const validatePoll = (data: any) => {
     title: validatePollTitle(data.title),
     body: validatePollBody(data.body),
     choices: validatePollChoices(data.choices),
+    collective: validatePollCollective(data.collective),
   };
   return Object.values(errors).some(Boolean) ? errors : undefined;
 };
@@ -95,3 +92,6 @@ export const validatePollBody = (body: any) =>
   typeof body !== "string" || body.length === 0
     ? "Body is required"
     : undefined;
+
+export const validatePollCollective = (collective: any) =>
+  !collective ? "Collective is required" : undefined;

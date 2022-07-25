@@ -8,9 +8,11 @@ import invariant from "tiny-invariant";
 import { Form, Link, useCatch, useLoaderData } from "@remix-run/react";
 import { json, redirect } from "@remix-run/node";
 
+import type { Collective } from "~/models/collective.server";
 import type { Poll } from "~/models/poll.server";
 import type { Vote } from "~/models/vote.server";
 import { castPollVote, getUserPollVote } from "~/models/vote.server";
+import { getCollective } from "~/models/collective.server";
 import { requireAuthenticatedUser } from "~/auth.server";
 import {
   deletePoll,
@@ -22,6 +24,7 @@ import {
 type LoaderData = {
   isCreator: boolean;
   poll: Poll;
+  collective: Collective;
   myVote: Vote;
 };
 
@@ -32,15 +35,18 @@ export const common = async ({ params, request }: DataFunctionArgs) => {
   const poll = await getPoll({ id: +params.id });
   if (!poll) throw new Response("Poll Not Found", { status: 404 });
 
+  const collective = await getCollective({ id: poll.collective });
+  if (!collective) throw new Response("Collective Not Found", { status: 404 });
+
   const isCreator = isPollCreator(poll, auth.user.id);
   const [myVote] = await getUserPollVote(auth.user.id, poll.id);
 
-  return { auth, poll, isCreator, myVote };
+  return { auth, collective, poll, isCreator, myVote };
 };
 
 export const loader: LoaderFunction = async (args) => {
-  const { isCreator, poll, myVote } = await common(args);
-  return json<LoaderData>({ isCreator, poll, myVote });
+  const { isCreator, collective, poll, myVote } = await common(args);
+  return json<LoaderData>({ isCreator, collective, poll, myVote });
 };
 
 export const action: ActionFunction = async (args) => {
@@ -85,13 +91,24 @@ export const action: ActionFunction = async (args) => {
 };
 
 export default function PollDetailsPage() {
-  const { isCreator, poll, myVote } = useLoaderData() as LoaderData;
+  const { isCreator, collective, poll, myVote } = useLoaderData() as LoaderData;
 
   return (
     <div>
       <h3 className="text-2xl font-bold">{poll.title}</h3>
-      <div className="grid gap-4">
-        <pre className="py-6">{poll.body}</pre>
+
+      <div className="my-4 grid gap-4">
+        <pre>{poll.body}</pre>
+
+        <div className="flex items-center gap-2">
+          <span className="witespace-nowrap">Collective:</span>
+          <span className="rounded-box border-2 border-neutral bg-base-200 p-2 px-3 shadow-md">
+            <Link to={`/collectives/${collective.id}`} reloadDocument>
+              {collective.title}
+            </Link>
+          </span>
+        </div>
+
         {poll.isPublished && (
           <div>
             <div className="divider"></div>
@@ -121,6 +138,7 @@ export default function PollDetailsPage() {
             <div className="divider"></div>
           </div>
         )}
+
         {isCreator && !poll.isPublished && (
           <div className="rounded-box grid gap-4 border-2 border-base-content bg-base-300 p-4 shadow-md">
             <div className="text-lg font-bold">You are the Poll Creator</div>

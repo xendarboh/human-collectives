@@ -16,6 +16,7 @@ import {
 
 import type { Collective } from "~/models/collective.server";
 import type { CollectiveJoinFormActionData } from "~/ui/collective-join-form";
+import type { Poll } from "~/models/poll.server";
 import type {
   ProofOfCollective,
   ProofOfCollectiveVerification,
@@ -23,6 +24,7 @@ import type {
 import { AlertError, AlertSuccess } from "~/ui/alerts";
 import { CollectiveJoinForm } from "~/ui/collective-join-form";
 import { ModalFormSubmission } from "~/ui/modal-form-submission";
+import { getPolls } from "~/models/poll.server";
 import { requireAuthenticatedUser } from "~/auth.server";
 import {
   isCollectiveMember,
@@ -44,6 +46,7 @@ type LoaderData = {
   collective: Collective;
   isCreator: boolean;
   isMember: boolean;
+  polls: Array<Poll>;
 };
 
 type ActionData = {
@@ -68,8 +71,11 @@ export const common = async ({ params, request }: DataFunctionArgs) => {
   return { auth, collective, isCreator, isMember };
 };
 
-export const loader: LoaderFunction = async (args) =>
-  json<LoaderData>(await common(args));
+export const loader: LoaderFunction = async (args) => {
+  const { collective, ...rest } = await common(args);
+  const polls = await getPolls({ collective: collective.id });
+  return json<LoaderData>({ collective, polls, ...rest });
+};
 
 export const action: ActionFunction = async (args) => {
   const { auth, collective, isCreator, isMember } = await common(args);
@@ -157,7 +163,8 @@ export const action: ActionFunction = async (args) => {
 };
 
 export default function CollectiveDetailsPage() {
-  const { collective, isCreator, isMember } = useLoaderData() as LoaderData;
+  const { collective, isCreator, isMember, polls } =
+    useLoaderData() as LoaderData;
   const actionData = useActionData() as ActionData;
   const transition = useTransition();
 
@@ -337,6 +344,22 @@ export default function CollectiveDetailsPage() {
           */}
           </div>
         )}
+
+        <div className="rounded-box grid gap-4 border-2 border-base-content bg-base-300 p-4 shadow-md">
+          <div className="text-lg font-bold">Collective Polls</div>
+          <div className="flex gap-2">
+            {polls.map((poll) => (
+              <span
+                key={poll.id}
+                className="rounded-box border-2 border-neutral bg-base-200 p-2 px-3 shadow-md"
+              >
+                <Link to={`/polls/${poll.id}`} reloadDocument>
+                  {poll.title}
+                </Link>
+              </span>
+            ))}
+          </div>
+        </div>
       </div>
 
       <ModalFormSubmission open={isSubmitting}>

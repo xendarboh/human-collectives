@@ -3,9 +3,16 @@ import * as React from "react";
 import { Link, Form } from "@remix-run/react";
 
 import type { Choice } from "~/models/choice.server";
+import type { Collective } from "~/models/collective.server";
 import type { Poll } from "~/models/poll.server";
 
-const PollForm = ({ actionData, poll, ...props }: PollFormProps) => {
+const PollForm = ({
+  actionData,
+  collective,
+  collectives,
+  poll,
+  ...props
+}: PollFormProps) => {
   const titleRef = React.useRef<HTMLInputElement>(null);
   const bodyRef = React.useRef<HTMLTextAreaElement>(null);
 
@@ -25,9 +32,35 @@ const PollForm = ({ actionData, poll, ...props }: PollFormProps) => {
 
   return (
     <Form {...props} className="grid gap-2">
+      <div className="form-control">
+        <label className="label">
+          <span className="label-text">Collective</span>
+        </label>
+        <select
+          name="collective"
+          defaultValue={
+            collective?.id ||
+            actionData?.values?.collective ||
+            "Select a collective..."
+          }
+          className="select select-bordered select-primary w-full max-w-xs bg-primary-content"
+        >
+          {collectives.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.title}
+            </option>
+          ))}
+        </select>
+        {actionData?.errors?.collective && (
+          <div className="pt-1 text-red-700" id="collective-error">
+            {actionData.errors.collective}
+          </div>
+        )}
+      </div>
+
       <div className="form-control w-full max-w-xs">
         <label className="label">
-          <span className="label-text">Title:</span>
+          <span className="label-text">Poll Title</span>
         </label>
         <input
           ref={titleRef}
@@ -165,11 +198,13 @@ PollForm.displayName = "PollForm";
 
 type PollFormActionData = {
   errors?: {
+    collective?: string;
     title?: string;
     body?: string;
     choices?: string;
   };
   values?: {
+    collective?: string;
     title?: string;
     body?: string;
     choices?: Array<Choice>;
@@ -178,6 +213,8 @@ type PollFormActionData = {
 
 interface PollFormProps extends FormProps {
   actionData: PollFormActionData;
+  collectives: Array<Collective>;
+  collective?: Collective;
   poll?: Poll;
 }
 

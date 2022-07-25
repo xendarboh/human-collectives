@@ -6,24 +6,31 @@ import type {
 } from "@remix-run/node";
 import invariant from "tiny-invariant";
 import { json, redirect } from "@remix-run/node";
-import { useActionData } from "@remix-run/react";
+import { useActionData, useLoaderData } from "@remix-run/react";
 
 import type { Choice } from "~/models/choice.server";
+import type { Collective } from "~/models/collective.server";
 import type { PollFormActionData } from "~/ui/poll-form";
 import { PollForm } from "~/ui/poll-form";
 import { createPoll } from "~/models/poll.server";
+import { getMemberCollectives } from "~/models/member.server";
 import { requireAuthenticatedUser } from "~/auth.server";
+
+type LoaderData = {
+  collectives: Array<Collective>;
+};
 
 export const meta: MetaFunction = () => {
   return {
-    title: "Create a Poll",
+    title: "Poll the Collective",
   };
 };
 
 export const getPollFormData = async ({ request }: DataFunctionArgs) => {
   const formData = await request.formData();
-  const body = formData.get("body")?.toString();
+  const collective = formData.get("collective")?.toString();
   const title = formData.get("title")?.toString();
+  const body = formData.get("body")?.toString();
   const choicesRemoved = formData.getAll("choicesRemoved");
 
   // build choices from two sets of form data
@@ -38,6 +45,7 @@ export const getPollFormData = async ({ request }: DataFunctionArgs) => {
   );
 
   const values = {
+    collective,
     body,
     title,
     choices,
@@ -47,13 +55,16 @@ export const getPollFormData = async ({ request }: DataFunctionArgs) => {
 };
 
 export const loader: LoaderFunction = async ({ request }) => {
-  await requireAuthenticatedUser(request);
-  return null;
+  const auth = await requireAuthenticatedUser(request);
+  const collectives = await getMemberCollectives(auth.user.id);
+  return json<LoaderData>({ collectives });
 };
 
 export const action: ActionFunction = async (args) => {
   const auth = await requireAuthenticatedUser(args.request);
   const { values } = await getPollFormData(args);
+  console.log("values", values);
+
   const [errors, poll] = await createPoll({ ...values, creator: auth.user.id });
 
   if (errors)
@@ -65,11 +76,16 @@ export const action: ActionFunction = async (args) => {
 
 export default function NewPoll() {
   const actionData = useActionData() as PollFormActionData;
+  const { collectives } = useLoaderData() as LoaderData;
 
   return (
     <div>
       <h1 className="pb-2 text-2xl font-bold">Create a Poll</h1>
-      <PollForm method="post" actionData={actionData}></PollForm>
+      <PollForm
+        method="post"
+        actionData={actionData}
+        collectives={collectives}
+      ></PollForm>
     </div>
   );
 }
