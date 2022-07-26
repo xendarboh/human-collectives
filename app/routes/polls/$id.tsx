@@ -10,9 +10,11 @@ import { json, redirect } from "@remix-run/node";
 
 import type { Collective } from "~/models/collective.server";
 import type { Poll } from "~/models/poll.server";
-import type { Vote } from "~/models/vote.server";
+import type { PollVote, Vote } from "~/models/vote.server";
+import { PollVotes } from "~/ui/poll-votes";
 import { castPollVote, getUserPollVote } from "~/models/vote.server";
 import { getCollective } from "~/models/collective.server";
+import { getPollVotes } from "~/models/vote.server";
 import { requireAuthenticatedUser } from "~/auth.server";
 import {
   deletePoll,
@@ -26,6 +28,7 @@ type LoaderData = {
   poll: Poll;
   collective: Collective;
   myVote: Vote;
+  votes: PollVote[];
 };
 
 export const common = async ({ params, request }: DataFunctionArgs) => {
@@ -46,7 +49,8 @@ export const common = async ({ params, request }: DataFunctionArgs) => {
 
 export const loader: LoaderFunction = async (args) => {
   const { isCreator, collective, poll, myVote } = await common(args);
-  return json<LoaderData>({ isCreator, collective, poll, myVote });
+  const votes = await getPollVotes(poll.id);
+  return json<LoaderData>({ isCreator, collective, poll, myVote, votes });
 };
 
 export const action: ActionFunction = async (args) => {
@@ -91,7 +95,8 @@ export const action: ActionFunction = async (args) => {
 };
 
 export default function PollDetailsPage() {
-  const { isCreator, collective, poll, myVote } = useLoaderData() as LoaderData;
+  const { isCreator, collective, poll, myVote, votes } =
+    useLoaderData() as LoaderData;
 
   return (
     <div>
@@ -110,8 +115,8 @@ export default function PollDetailsPage() {
         </div>
 
         {poll.isPublished && (
-          <div>
-            <div className="divider"></div>
+          <div className="rounded-box grid gap-4 border-2 border-base-content bg-base-300 p-4 shadow-md">
+            <div className="text-lg font-bold">Choices</div>
             <Form method="post">
               <input type="hidden" name="action" value="vote" />
               <div className="flex w-full flex-col lg:flex-row">
@@ -125,8 +130,8 @@ export default function PollDetailsPage() {
                       name="choice"
                       value={choice.id}
                       className={
-                        "btn grid h-24 flex-grow place-items-center border-2 bg-base-300 lg:max-w-md " +
-                        (choice.id == myVote.choiceId ? "btn-secondary" : "")
+                        "btn grid h-24 flex-grow place-items-center border-2 bg-base-100 lg:max-w-md " +
+                        (choice.id == myVote?.choiceId ? "btn-secondary" : "")
                       }
                     >
                       {choice.content}
@@ -135,9 +140,10 @@ export default function PollDetailsPage() {
                 ))}
               </div>
             </Form>
-            <div className="divider"></div>
           </div>
         )}
+
+        {poll.isPublished && <PollVotes poll={poll} votes={votes} />}
 
         {isCreator && !poll.isPublished && (
           <div className="rounded-box grid gap-4 border-2 border-base-content bg-base-300 p-4 shadow-md">

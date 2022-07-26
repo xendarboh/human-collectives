@@ -289,7 +289,7 @@ export default function CollectiveDetailsPage() {
               </label>
               <textarea
                 name="proofToVerify"
-                className="textarea textarea-bordered textarea-primary h-36 bg-primary-content"
+                className="textarea textarea-bordered textarea-primary h-32 bg-primary-content text-xs"
                 placeholder=""
               ></textarea>
             </div>
@@ -362,6 +362,11 @@ export default function CollectiveDetailsPage() {
                 </Link>
               </span>
             ))}
+          </div>
+          <div className="flex gap-4">
+            <Link to="/polls/new" className="btn btn-primary">
+              New
+            </Link>
           </div>
         </div>
       </div>

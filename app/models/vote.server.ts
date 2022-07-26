@@ -2,12 +2,19 @@ import invariant from "tiny-invariant";
 
 import type { QueryOptions } from "~/db.server";
 import { db, defaultQueryOptions } from "~/db.server";
+import { getPollChoices } from "./choice.server";
 
 export interface Vote {
   id: number;
   userId: number;
   choiceId: number;
   created_at?: string;
+}
+
+export interface PollVote {
+  choiceId: number;
+  content: string;
+  count: number;
 }
 
 export const createVote = async (
@@ -60,6 +67,21 @@ export const getUserPollVote = async (
     .leftJoin("choice2poll", "votes.choiceId", "=", "choice2poll.choiceId")
     .where("votes.userId", userId)
     .andWhere("choice2poll.pollId", pollId);
+
+export const getPollVotes = async (
+  pollId: number
+): Promise<Array<PollVote>> => {
+  const votes = [];
+  const choices = await getPollChoices(pollId);
+
+  for (const choice of choices) {
+    const { id, content } = choice;
+    const res = await db("votes").count({ count: "*" }).where({ choiceId: id });
+    const count = res[0].count === undefined ? 0 : +res[0].count;
+    votes.push({ choiceId: id, content, count });
+  }
+  return votes;
+};
 
 export const validateVote = (vote: any) => {
   if (!vote || !vote.userId || !vote.choiceId) return "vote data required";
