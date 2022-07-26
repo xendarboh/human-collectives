@@ -7,8 +7,8 @@ import type {
 import { json, redirect } from "@remix-run/node";
 import { useActionData, useCatch } from "@remix-run/react";
 
-import type { CollectiveJoinFormActionData } from "~/ui/collective-join-form";
-import { CollectiveJoinForm } from "~/ui/collective-join-form";
+import type { CollectiveFormJoinActionData } from "~/ui/collective-form-join";
+import { CollectiveFormJoin } from "~/ui/collective-form-join";
 import { joinCollective } from "~/models/member.server";
 import { requireAuthenticatedUser } from "~/auth.server";
 
@@ -38,7 +38,7 @@ export const action: ActionFunction = async (args) => {
   const [errors, member] = await joinCollective(+auth.user.id, values);
 
   if (errors || !member)
-    return json<CollectiveJoinFormActionData>(
+    return json<CollectiveFormJoinActionData>(
       { errors, values },
       { status: 400 }
     );
@@ -47,15 +47,15 @@ export const action: ActionFunction = async (args) => {
 };
 
 export default function JoinCollective() {
-  const actionData = useActionData() as CollectiveJoinFormActionData;
+  const actionData = useActionData() as CollectiveFormJoinActionData;
 
   return (
     <div>
       <h1 className="pb-2 text-2xl font-bold">Join a Collective</h1>
-      <CollectiveJoinForm
+      <CollectiveFormJoin
         method="post"
         actionData={actionData}
-      ></CollectiveJoinForm>
+      ></CollectiveFormJoin>
     </div>
   );
 }

@@ -52,7 +52,7 @@ export default function Login() {
     <div className="mt-8 grid place-items-center gap-8">
       {data.error && <AlertError>{data.error?.message}</AlertError>}
       <Form action="/auth/humanode" method="post">
-        <button className="btn btn-primary">Authenticate with Humanode</button>
+        <button className="btn btn-primary">Authenticate with HUMΔNODE</button>
       </Form>
     </div>
   );

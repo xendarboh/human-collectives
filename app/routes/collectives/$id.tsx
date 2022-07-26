@@ -15,14 +15,14 @@ import {
 } from "@remix-run/react";
 
 import type { Collective } from "~/models/collective.server";
-import type { CollectiveJoinFormActionData } from "~/ui/collective-join-form";
+import type { CollectiveFormJoinActionData } from "~/ui/collective-form-join";
 import type { Poll } from "~/models/poll.server";
 import type {
   ProofOfCollective,
   ProofOfCollectiveVerification,
 } from "~/models/proof.server";
 import { AlertError, AlertSuccess } from "~/ui/alerts";
-import { CollectiveJoinForm } from "~/ui/collective-join-form";
+import { CollectiveFormJoin } from "~/ui/collective-form-join";
 import { ModalFormSubmission } from "~/ui/modal-form-submission";
 import { getPolls } from "~/models/poll.server";
 import { requireAuthenticatedUser } from "~/auth.server";
@@ -50,7 +50,7 @@ type LoaderData = {
 };
 
 type ActionData = {
-  joinForm?: CollectiveJoinFormActionData;
+  formJoin?: CollectiveFormJoinActionData;
   proofOfExclusion?: ProofOfCollective;
   proofOfInclusion?: ProofOfCollective;
   proofVerification?: ProofOfCollectiveVerification;
@@ -121,7 +121,7 @@ export const action: ActionFunction = async (args) => {
         values
       );
       if (errors || !member)
-        return json({ joinForm: { errors, values } }, { status: 400 });
+        return json({ formJoin: { errors, values } }, { status: 400 });
       return null;
     }
 
@@ -213,13 +213,13 @@ export default function CollectiveDetailsPage() {
                 </button>
               </div>
             </Form>
-            <CollectiveJoinForm
+            <CollectiveFormJoin
               method="post"
-              actionData={actionData?.joinForm}
+              actionData={actionData?.formJoin}
               collective={collective}
             >
               <input type="hidden" name="action" value="joinCollective" />
-            </CollectiveJoinForm>
+            </CollectiveFormJoin>
           </div>
         )}
 

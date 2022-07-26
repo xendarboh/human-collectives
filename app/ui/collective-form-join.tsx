@@ -4,12 +4,12 @@ import { Form } from "@remix-run/react";
 
 import type { Collective } from "~/models/collective.server";
 
-const CollectiveJoinForm = ({
+const CollectiveFormJoin = ({
   actionData,
   collective,
   children,
   ...props
-}: CollectiveJoinFormProps) => {
+}: CollectiveFormJoinProps) => {
   const accessCodeRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
@@ -58,9 +58,9 @@ const CollectiveJoinForm = ({
   );
 };
 
-CollectiveJoinForm.displayName = "CollectiveJoinForm";
+CollectiveFormJoin.displayName = "CollectiveFormJoin";
 
-type CollectiveJoinFormActionData = {
+type CollectiveFormJoinActionData = {
   errors?: {
     accessCode?: string;
   };
@@ -69,10 +69,10 @@ type CollectiveJoinFormActionData = {
   };
 };
 
-interface CollectiveJoinFormProps extends FormProps {
-  actionData?: CollectiveJoinFormActionData;
+interface CollectiveFormJoinProps extends FormProps {
+  actionData?: CollectiveFormJoinActionData;
   collective?: Collective;
 }
 
-export type { CollectiveJoinFormActionData, CollectiveJoinFormProps };
-export { CollectiveJoinForm };
+export type { CollectiveFormJoinActionData, CollectiveFormJoinProps };
+export { CollectiveFormJoin };
