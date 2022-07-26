@@ -35,7 +35,7 @@ export const action: ActionFunction = async (args) => {
   const values = {
     accessCode: formData.get("accessCode")?.toString(),
   };
-  const [errors, member] = await joinCollective(+auth.user.id, values);
+  const [errors, member] = await joinCollective(auth.user.id, auth.id, values);
 
   if (errors || !member)
     return json<CollectiveFormJoinActionData>(
