@@ -16,6 +16,7 @@ import {
 
 import type { Collective } from "~/models/collective.server";
 import type { CollectiveFormJoinActionData } from "~/ui/collective-form-join";
+import type { CollectiveFormMemberManageActionData } from "~/ui/collective-form-member-manage";
 import type { Poll } from "~/models/poll.server";
 import type {
   ProofOfCollective,
@@ -23,10 +24,13 @@ import type {
 } from "~/models/proof.server";
 import { AlertError, AlertSuccess } from "~/ui/alerts";
 import { CollectiveFormJoin } from "~/ui/collective-form-join";
+import { CollectiveFormMemberManage } from "~/ui/collective-form-member-manage";
 import { ModalFormSubmission } from "~/ui/modal-form-submission";
 import { getPolls } from "~/models/poll.server";
 import { requireAuthenticatedUser } from "~/auth.server";
 import {
+  collectiveAddMember,
+  collectiveRemoveMember,
   isCollectiveMember,
   joinCollective,
   leaveCollective,
@@ -51,6 +55,7 @@ type LoaderData = {
 
 type ActionData = {
   formJoin?: CollectiveFormJoinActionData;
+  formMemberManage?: CollectiveFormMemberManageActionData;
   proofOfExclusion?: ProofOfCollective;
   proofOfInclusion?: ProofOfCollective;
   proofVerification?: ProofOfCollectiveVerification;
@@ -123,6 +128,44 @@ export const action: ActionFunction = async (args) => {
       if (errors || !member)
         return json({ formJoin: { errors, values } }, { status: 400 });
       return null;
+    }
+
+    case "addMember": {
+      if (!collective.isManaged) {
+        throw new Response(
+          "Only members can join or leave this collective themselves",
+          {
+            status: 403,
+          }
+        );
+      }
+
+      const values = {
+        authId: formData.get("authId")?.toString() + "",
+      };
+      const [errors, member] = await collectiveAddMember(collective.id, values);
+      if (errors || !member)
+        return json({ formMemberManage: { errors, values } }, { status: 400 });
+      return json({ formMemberManage: { success: "Member Added" } });
+    }
+
+    case "removeMember": {
+      if (!collective.isManaged) {
+        throw new Response(
+          "Only members can join or leave this collective themselves",
+          {
+            status: 403,
+          }
+        );
+      }
+
+      const values = {
+        authId: formData.get("authId")?.toString() + "",
+      };
+      const [errors] = await collectiveRemoveMember(collective.id, values);
+      if (errors)
+        return json({ formMemberManage: { errors, values } }, { status: 400 });
+      return json({ formMemberManage: { success: "Member Removed" } });
     }
 
     case "proveInclusion": {
@@ -332,20 +375,22 @@ export default function CollectiveDetailsPage() {
                 </button>
               </div>
             </Form>
-            {/*
-            <Form method="post">
-              <div className="flex w-full flex-col lg:flex-row">
-                {collective.members?.map((member, key) => (
-                  <div key={key}>{member.userId}</div>
-                ))}
+
+            {!!collective.isManaged && (
+              <div className="rounded-box grid gap-4 border-2 border-base-content bg-base-300 p-4 shadow-md">
+                <div className="text-lg font-bold">Manage Membership</div>
+                {actionData?.formMemberManage?.success && (
+                  <AlertSuccess>
+                    {actionData.formMemberManage.success}
+                  </AlertSuccess>
+                )}
+                <CollectiveFormMemberManage
+                  method="post"
+                  actionData={actionData?.formMemberManage}
+                  collective={collective}
+                ></CollectiveFormMemberManage>
               </div>
-            </Form>
-          */}
-            {/*
-            <pre className="whitespace-pre-line">
-              {JSON.stringify(collective, null, 2)}
-            </pre>
-          */}
+            )}
           </div>
         )}
 

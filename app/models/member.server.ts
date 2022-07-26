@@ -9,6 +9,7 @@ import {
   restoreSMTree,
   saveSMTree,
 } from "~/utils/smt.server";
+import { createUser, getUser } from "./user.server";
 
 export interface Member {
   userId: number;
@@ -96,45 +97,74 @@ export const joinCollective = async (
     : undefined;
   if (errors) return [errors, null];
 
+  // discern which collective to join from the given accessCode
   const [collective] = await db
     .select("id")
     .from<Collective>("collectives")
     .where({ accessCode: data.accessCode });
   invariant(collective, "Join collective failed");
 
-  const [errors2, member] = await createMember({
+  const [errors2, member] = await _collectiveMembershipAdd(
+    collective.id,
     userId,
-    collectiveId: collective.id,
-  });
-  if (errors2) return [errors2, null];
-  invariant(member, "Join collective failed");
-
-  // add member's biometric-identifier to the collective's SMT
-  const treeId = { type: "collective", key: collective.id };
-  const tree = await restoreSMTree(treeId);
-  const key = prepareSMTKey(authId);
-  const value = hashCode("something?"); // TODO
-  await tree.insert(key, value);
-  await saveSMTree(treeId, tree.db);
-
-  return [undefined, member];
+    authId
+  );
+  return [errors2, member];
 };
 
 export const leaveCollective = async (
   collectiveId: number,
   userId: number,
   authId: string
-) => {
-  await db("members").where({ userId, collectiveId }).del();
+) => await _collectiveMembershipRemove(collectiveId, userId, authId);
 
-  // remove member from the collective's SMT
-  const treeId = { type: "collective", key: collectiveId };
-  const tree = await restoreSMTree(treeId);
-  const key = prepareSMTKey(authId);
-  const search = await tree.find(key);
-  invariant(search.found === true, "Member not found in collective's SMT");
-  await tree.delete(key);
-  await saveSMTree(treeId, tree.db);
+// Note: this function assumes collective exists for the given collectiveId
+export const collectiveAddMember = async (
+  collectiveId: number,
+  data: { authId: string },
+  opts: QueryOptions = defaultQueryOptions
+): Promise<[any, Member | null]> => {
+  const errors = opts.validate
+    ? await validateCollectiveAddMember(data)
+    : undefined;
+  if (errors) return [errors, null];
+
+  const { authId } = data;
+
+  // retreive user from database if it exists
+  // create user in database if does not exist, to "register" the user
+  // ensure user exists
+  let user = await getUser({ bioid: authId });
+  if (!user) user = await createUser({ bioid: authId });
+  invariant(user, "User Registration Failed");
+
+  const [errors2, member] = await _collectiveMembershipAdd(
+    collectiveId,
+    user.id,
+    authId
+  );
+  return [errors2, member];
+};
+
+// Note: this function assumes collective exists for the given collectiveId
+export const collectiveRemoveMember = async (
+  collectiveId: number,
+  data: { authId: string },
+  opts: QueryOptions = defaultQueryOptions
+): Promise<[any]> => {
+  const errors = opts.validate
+    ? await validateCollectiveRemoveMember(data)
+    : undefined;
+  if (errors) return [errors];
+
+  const { authId } = data;
+
+  // retreive user from database if it exists
+  let user = await getUser({ bioid: authId });
+  invariant(user, "User Not Found");
+
+  await _collectiveMembershipRemove(collectiveId, user.id, authId);
+  return [undefined];
 };
 
 export const validateJoinCollective = async (data: any) => {
@@ -143,6 +173,16 @@ export const validateJoinCollective = async (data: any) => {
   };
   return Object.values(errors).some(Boolean) ? errors : undefined;
 };
+
+export const validateCollectiveAddMember = async (data: any) => {
+  const errors = {
+    authId: await validateCollectiveMemberAuthId(data),
+  };
+  return Object.values(errors).some(Boolean) ? errors : undefined;
+};
+
+export const validateCollectiveRemoveMember = async (data: any) =>
+  await validateCollectiveAddMember(data);
 
 export const validateJoinCollectiveAccessCode = async (data: any) => {
   const { userId, accessCode } = data;
@@ -161,4 +201,60 @@ export const validateJoinCollectiveAccessCode = async (data: any) => {
   if (member) return "Already a member of that collective";
 
   return undefined;
+};
+
+const authIdMinLength = 8; // TODO: this is made up and could be more legit or use regexp
+export const validateCollectiveMemberAuthId = async (data: any) => {
+  const { authId } = data;
+  if (typeof authId !== "string" || authId.length === 0)
+    return "HUMΔNODE Identifier is Required";
+
+  if (authId.length <= authIdMinLength)
+    return "HUMΔNODE Identifier Invalid Format";
+
+  return undefined;
+};
+
+// create collective membership (in database)
+// and add to collective's SMT
+export const _collectiveMembershipAdd = async (
+  collectiveId: number,
+  userId: number,
+  authId: string
+): Promise<[any, Member | null]> => {
+  const [errors, member] = await createMember({
+    userId,
+    collectiveId,
+  });
+  if (errors) return [errors, null];
+  invariant(member, "Create Member Failed");
+
+  // add member's biometric-identifier to the collective's SMT
+  const treeId = { type: "collective", key: collectiveId };
+  const tree = await restoreSMTree(treeId);
+  const key = prepareSMTKey(authId);
+  const value = hashCode("something?"); // TODO
+  await tree.insert(key, value);
+  await saveSMTree(treeId, tree.db);
+
+  return [undefined, member];
+};
+
+// remove collective membership (in database)
+// and remove from collective's SMT
+export const _collectiveMembershipRemove = async (
+  collectiveId: number,
+  userId: number,
+  authId: string
+) => {
+  await db("members").where({ userId, collectiveId }).del();
+
+  // remove member from the collective's SMT
+  const treeId = { type: "collective", key: collectiveId };
+  const tree = await restoreSMTree(treeId);
+  const key = prepareSMTKey(authId);
+  const search = await tree.find(key);
+  invariant(search.found === true, "Member not found in collective's SMT");
+  await tree.delete(key);
+  await saveSMTree(treeId, tree.db);
 };

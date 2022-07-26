@@ -102,6 +102,24 @@ const CollectiveForm = ({
         </span>
       </div>
 
+      <div className="form-control flex flex-row items-center gap-4">
+        <label className="label cursor-pointer">
+          <span className="label-text w-24">Managed?</span>
+        </label>
+        <input
+          type="checkbox"
+          name="isManaged"
+          defaultChecked={
+            collective?.isManaged || actionData?.values?.isManaged
+          }
+          className="checkbox checkbox-primary"
+        />
+        <span className="text-xs">
+          If enabled, the creator may add and remove members. Otherwise only
+          bio-authenticated humans can join or leave the collective themselves.
+        </span>
+      </div>
+
       <div className="mt-8 flex gap-4">
         <button type="submit" className="btn btn-primary">
           Save
@@ -125,6 +143,7 @@ type CollectiveFormActionData = {
     description?: string;
     isPublic?: string;
     isOpenAccess?: string;
+    isManaged?: string;
     members?: string;
   };
   values?: {
@@ -132,6 +151,7 @@ type CollectiveFormActionData = {
     description?: string;
     isPublic?: boolean;
     isOpenAccess?: boolean;
+    isManaged?: boolean;
     members?: Array<number>;
   };
 };

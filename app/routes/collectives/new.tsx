@@ -25,12 +25,14 @@ export const getCollectiveFormData = async ({ request }: DataFunctionArgs) => {
   const description = formData.get("description")?.toString();
   const isPublic = formData.get("isPublic") ? true : false;
   const isOpenAccess = formData.get("isOpenAccess") ? true : false;
+  const isManaged = formData.get("isManaged") ? true : false;
 
   const values = {
     title,
     description,
     isPublic,
     isOpenAccess,
+    isManaged,
   };
   return { values };
 };

@@ -17,6 +17,7 @@ export interface Collective {
   description: string;
   creator: number; // id of the user that created the collective
   accessCode: string; // code enabling members to join the collective
+  isManaged: boolean; // creator may add/remove members?
   isOpenAccess: boolean; // members can register without accessCode?
   isPublic: boolean; // visible to all? (or only members)
   created_at?: string;
