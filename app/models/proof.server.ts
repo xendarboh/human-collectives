@@ -4,6 +4,7 @@ import fs from "fs";
 import {
   generateSMTreeExclusionWitnessInput,
   generateSMTreeInclusionWitnessInput,
+  prepareSMTKey,
 } from "~/utils/smt.server";
 
 export interface Proof {
@@ -37,10 +38,10 @@ const DIR_ASSETS = "public"; // TODO abstract
 
 export const getProofOfCollectiveInclusion = async (
   collectiveId: number,
-  userId: number
+  authId: string
 ): Promise<ProofOfCollective | null> => {
   const treeId = { type: "collective", key: collectiveId };
-  const key = userId;
+  const key = prepareSMTKey(authId);
   const input = await generateSMTreeInclusionWitnessInput(treeId, key);
   if (!input) return null;
 
@@ -53,10 +54,10 @@ export const getProofOfCollectiveInclusion = async (
 
 export const getProofOfCollectiveExclusion = async (
   collectiveId: number,
-  userId: number
+  authId: string
 ): Promise<ProofOfCollective | null> => {
   const treeId = { type: "collective", key: collectiveId };
-  const key = userId;
+  const key = prepareSMTKey(authId);
   const input = await generateSMTreeExclusionWitnessInput(treeId, key);
   if (!input) return null;
 

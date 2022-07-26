@@ -1,5 +1,7 @@
-import type { SMTreeIdentifier, SMTree } from "../models/smt.server";
 import { SMT, newMemEmptyTrie } from "circomlibjs";
+import { ethers } from "ethers";
+
+import type { SMTreeIdentifier, SMTree } from "../models/smt.server";
 import { createSMTree, getSMTree, updateSMTree } from "../models/smt.server";
 
 export interface SMTTreeWitnessInput {
@@ -195,6 +197,14 @@ export const hex2arr = (x: string): Uint8Array =>
  */
 export const hashCode = (str: string) =>
   Array.from(str).reduce((s, c) => (Math.imul(31, s) + c.charCodeAt(0)) | 0, 0);
+
+/**
+ * Prepare a key to be inserted into a Merkle Tree in hashed numerical form.
+ *
+ * @param {string} key a key to be inserted as a node into a Merkle Tree
+ * @return {string} a hashed form of the key that will convert to BigInt
+ */
+export const prepareSMTKey = (key: string): string => ethers.utils.id(key);
 
 // A Sparse Merkle Tree database, as provided to circomlibjs SMT implementation.
 // Adapted from

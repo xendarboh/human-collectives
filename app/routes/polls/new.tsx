@@ -63,7 +63,6 @@ export const loader: LoaderFunction = async ({ request }) => {
 export const action: ActionFunction = async (args) => {
   const auth = await requireAuthenticatedUser(args.request);
   const { values } = await getPollFormData(args);
-  console.log("values", values);
 
   const [errors, poll] = await createPoll({ ...values, creator: auth.user.id });
 

@@ -101,7 +101,7 @@ export const action: ActionFunction = async (args) => {
           }
         );
       }
-      await leaveCollective(collective.id, auth.user.id);
+      await leaveCollective(collective.id, auth.user.id, auth.id);
       return null;
     }
 
@@ -115,7 +115,11 @@ export const action: ActionFunction = async (args) => {
       const values = {
         accessCode: formData.get("accessCode")?.toString(),
       };
-      const [errors, member] = await joinCollective(+auth.user.id, values);
+      const [errors, member] = await joinCollective(
+        auth.user.id,
+        auth.id,
+        values
+      );
       if (errors || !member)
         return json({ joinForm: { errors, values } }, { status: 400 });
       return null;
@@ -124,7 +128,7 @@ export const action: ActionFunction = async (args) => {
     case "proveInclusion": {
       const proofOfInclusion = await getProofOfCollectiveInclusion(
         collective.id,
-        auth.user.id
+        auth.id
       );
       if (!proofOfInclusion)
         throw new Response("Failed to generate Proof of Collective Inclusion", {
@@ -136,7 +140,7 @@ export const action: ActionFunction = async (args) => {
     case "proveExclusion": {
       const proofOfExclusion = await getProofOfCollectiveExclusion(
         collective.id,
-        auth.user.id
+        auth.id
       );
       if (!proofOfExclusion)
         throw new Response("Failed to generate Proof of Collective Exclusion", {

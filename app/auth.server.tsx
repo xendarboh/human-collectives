@@ -27,7 +27,7 @@ invariant(
 // The AuthenticatedUser type is stored in the session storage to identify the
 // authenticated user.
 export interface AuthenticatedUser {
-  id: string;
+  id: string; // humanode identifier
   jwt: string;
   user: User; // from the database
 }

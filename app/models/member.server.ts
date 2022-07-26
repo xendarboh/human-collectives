@@ -3,7 +3,12 @@ import invariant from "tiny-invariant";
 import type { Collective } from "~/models/collective.server";
 import type { QueryOptions } from "~/db.server";
 import { db, defaultQueryOptions } from "~/db.server";
-import { hashCode, restoreSMTree, saveSMTree } from "~/utils/smt.server";
+import {
+  hashCode,
+  prepareSMTKey,
+  restoreSMTree,
+  saveSMTree,
+} from "~/utils/smt.server";
 
 export interface Member {
   userId: number;
@@ -82,6 +87,7 @@ export const validateMember = (x: any) => {
 
 export const joinCollective = async (
   userId: number,
+  authId: string,
   data: any,
   opts: QueryOptions = defaultQueryOptions
 ): Promise<[any, Member | null]> => {
@@ -103,24 +109,31 @@ export const joinCollective = async (
   if (errors2) return [errors2, null];
   invariant(member, "Join collective failed");
 
-  // add member to the collective's SMT
+  // add member's biometric-identifier to the collective's SMT
   const treeId = { type: "collective", key: collective.id };
   const tree = await restoreSMTree(treeId);
-  await tree.insert(userId, hashCode("something?")); // TODO use humanode identifier vs userId
+  const key = prepareSMTKey(authId);
+  const value = hashCode("something?"); // TODO
+  await tree.insert(key, value);
   await saveSMTree(treeId, tree.db);
 
   return [undefined, member];
 };
 
-export const leaveCollective = async (collectiveId: number, userId: number) => {
+export const leaveCollective = async (
+  collectiveId: number,
+  userId: number,
+  authId: string
+) => {
   await db("members").where({ userId, collectiveId }).del();
 
   // remove member from the collective's SMT
   const treeId = { type: "collective", key: collectiveId };
   const tree = await restoreSMTree(treeId);
-  const search = await tree.find(userId);
+  const key = prepareSMTKey(authId);
+  const search = await tree.find(key);
   invariant(search.found === true, "Member not found in collective's SMT");
-  await tree.delete(userId); // TODO use humanode identifier vs userId
+  await tree.delete(key);
   await saveSMTree(treeId, tree.db);
 };
 
@@ -145,7 +158,6 @@ export const validateJoinCollectiveAccessCode = async (data: any) => {
 
   // ensure user is not already a member of the collective
   const member = await getMember({ userId, collectiveId: collective.id });
-  console.log("res", member);
   if (member) return "Already a member of that collective";
 
   return undefined;
