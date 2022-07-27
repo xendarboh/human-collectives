@@ -8,7 +8,7 @@ services:
     network_mode: bridge
     restart: always
     build:
-      context: ../
+      context: ./
     ports:
       - "3000:3000"
 
@@ -32,7 +32,7 @@ services:
     container_name: collectives
     hostname: localhost
     volumes:
-      - ../:/app
+      - ./:/app
     environment:
       - NODE_ENV=development
       - npm_config_cache=/tmp/npm_cache
